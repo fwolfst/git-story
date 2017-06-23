@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'git/story'
+
+Git::Story::App.new.run
