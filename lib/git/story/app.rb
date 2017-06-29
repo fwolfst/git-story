@@ -205,7 +205,7 @@ class Git::Story::App
   end
 
   def current_branch
-    `git current`.strip
+    `git rev-parse --abbrev-ref HEAD`.strip
   end
 
   def check_current
