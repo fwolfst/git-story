@@ -43,8 +43,8 @@ class Git::Story::App
   end
 
   command doc: 'output the current story branch if it is checked out'
-  def current
-    check_current
+  def current(check: true)
+    check and check_current
     current_branch
   end
 
@@ -62,7 +62,7 @@ class Git::Story::App
   end
 
   command doc: 'list all stories'
-  def list(mark_red: current)
+  def list(mark_red: current(check: false))
     stories.map { |b|
       (bn = b.story_base_name) == mark_red ? bn.red : bn.green
     }
