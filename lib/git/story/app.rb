@@ -1,4 +1,3 @@
-
 class Git::Story::App
   class ::String
     include Term::ANSIColor
@@ -108,10 +107,10 @@ class Git::Story::App
     if old_story = stories.find { |s| s.story_id == @story_id }
       error "story ##{@story_id} already exists in #{old_story}".red
     end
-    puts "Now starting story #{name.inspect}".green
+    puts "Now creating story #{name.inspect}".green
     sh "git checkout --track -b #{name}"
     sh "git push -u origin #{name}"
-    "Story #{name} started.".green
+    "Story #{name} created.".green
   end
 
   command doc: '[PATTERN] switch to story matching PATTERN'
