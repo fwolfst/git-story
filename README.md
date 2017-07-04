@@ -16,5 +16,4 @@ Florian Frank mailto:flori@ping.de
 
 ## License
 
-This software is licensed under the X11 (or MIT) license:
-http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3
+Apache License, Version 2.0 – See the COPYING file in the source archive.

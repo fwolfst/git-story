@@ -24,6 +24,7 @@ GemHadar do
   development_dependency 'rake'
   development_dependency 'simplecov'
   development_dependency 'rspec'
+  licenses << 'Apache-2.0'
 end
 
 task :default => :spec
