@@ -73,9 +73,20 @@ class Git::Story::App
     `git tag | grep ^#{complex_config.story.deploy_tag_prefix} | sort`.lines.map(&:chomp)
   end
 
+  command doc: 'output the times of all production deploys'
+  def deploys
+    deploy_tags.map { |t| format_tag_time(t).green + " #{t.yellow}" }
+  end
+
   command doc: 'output the last production deploy tag'
   def deploy_tags_last
     deploy_tags.last
+  end
+
+  command doc: 'output the time of the last production deploy'
+  def deploys_last
+    tag = deploy_tags_last
+    format_tag_time(tag).green + " #{tag.yellow}"
   end
 
   command doc: 'output log of changes since last production deploy tag'
@@ -210,5 +221,13 @@ class Git::Story::App
   def check_current
     current_branch =~ BRANCH_NAME_REGEX or
       error 'Switch to a story branch first for this operation!'
+  end
+
+  def format_tag_time(tag)
+    if tag =~ /\d{4}_\d{2}_\d{2}-\d{2}_\d{2}/
+      time = Time.strptime($&, '%Y_%m_%d-%H_%M')
+      day  = Time::RFC2822_DAY_NAME[time.wday]
+      "#{time.iso8601} #{day}"
+    end
   end
 end
