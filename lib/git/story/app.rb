@@ -30,15 +30,23 @@ class Git::Story::App
     if command_of(@command)
       puts __send__(@command, *@argv)
     else
-      fail "Unknown command #{@command.inspect}"
+      @command and @command = @command.inspect
+      @command ||= 'n/a'
+      STDERR.puts "Unknown command #{@command}\n\n#{help.join(?\n)}"
+      exit 1
     end
   rescue Errno::EPIPE
   end
 
   command doc: 'this help'
   def help
+    result = [ 'Available commands are:' ]
     longest = command_annotations.keys.map(&:size).max
-    command_annotations.map { |name, a| "#{name.to_s.ljust(longest)} #{a[:doc]}" }
+    result.concat(
+      command_annotations.map { |name, a|
+        "#{name.to_s.ljust(longest)} #{a[:doc]}"
+      }
+    )
   end
 
   command doc: 'output the current story branch if it is checked out'
