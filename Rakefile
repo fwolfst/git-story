@@ -3,7 +3,7 @@
 require 'gem_hadar'
 
 GemHadar do
-  name        'git-story'
+  name        'git-story-workflow'
   path_name   'git/story'
   author      'Florian Frank'
   email       'flori@ping.de'
