@@ -113,14 +113,14 @@ class Git::Story::App
     capture("git log #{opts} #{deploy_tags.last}..")
   end
 
-  command doc: 'output diff since last production deploy tag'
+  command doc: '[REF] output diff since last production deploy tag'
   def deploy_diff(ref = nil)
     fetch_tags
     opts = '-u'
     capture("git diff --color #{opts} #{ref} #{deploy_tags.last}")
   end
 
-  command doc: 'output migration diff since last production deploy tag'
+  command doc: '[REF] output migration diff since last production deploy tag'
   def deploy_migrate_diff(ref = nil)
     fetch_tags
     opts = '-u'
