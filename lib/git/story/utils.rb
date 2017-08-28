@@ -4,11 +4,19 @@ module Git::Story::Utils
   include FileUtils::Verbose
 
   def sh(*a, error: true)
+    @debug and STDERR.puts("Executing #{a * ' '}")
     system(*a)
     if error && !$?.success?
       STDERR.puts ("Failed with rc #{$?.exitstatus}: " + a.join(' ')).red
       exit $?.exitstatus
     end
+  end
+
+  def capture(command)
+    @debug and STDERR.puts("Executing #{command.inspect}")
+    result = `#{command}`
+    @debug and STDERR.puts("Result\n#{result}")
+    result
   end
 
   def ask(prompt: '? ', **options, &block)

@@ -20,9 +20,10 @@ class Git::Story::App
     attr_accessor :story_id
   end
 
-  def initialize(argv = ARGV)
+  def initialize(argv = ARGV, debug: ENV['DEBUG'].to_i == 1)
     @argv    = argv
     @command = @argv.shift&.to_sym
+    @debug   = debug
   end
 
   def run
@@ -84,7 +85,9 @@ class Git::Story::App
   command doc: 'list all production deploy tags'
   def deploy_tags
     fetch_tags
-    `git tag | grep ^#{complex_config.story.deploy_tag_prefix} | sort`.lines.map(&:chomp)
+    capture(
+      "git tag | grep ^#{complex_config.story.deploy_tag_prefix} | sort"
+    ).lines.map(&:chomp)
   end
 
   command doc: 'output the times of all production deploys'
@@ -107,21 +110,21 @@ class Git::Story::App
   def deploy_log
     fetch_tags
     opts = '--pretty=tformat:"%C(yellow)%h%Creset %C(green)%ci%Creset %s (%Cred%an <%ae>%Creset)"'
-    `git log #{opts} #{deploy_tags.last}..`
+    capture("git log #{opts} #{deploy_tags.last}..")
   end
 
   command doc: 'output diff since last production deploy tag'
-  def deploy_diff
+  def deploy_diff(ref = nil)
     fetch_tags
     opts = '-u'
-    `git diff --color #{opts} #{deploy_tags.last}`
+    capture("git diff --color #{opts} #{ref} #{deploy_tags.last}")
   end
 
-  command doc: 'outpit migration diff since last production deploy tag'
-  def deploy_migrate_diff
+  command doc: 'output migration diff since last production deploy tag'
+  def deploy_migrate_diff(ref = nil)
     fetch_tags
     opts = '-u'
-    `git diff --color #{opts} #{deploy_tags.last} -- db/migrate`
+    capture("git diff --color #{opts} #{deploy_tags.last} #{ref} -- db/migrate")
   end
 
   command doc: '[STORYID] create a story for story STORYID'
@@ -196,7 +199,7 @@ class Git::Story::App
   def pivotal_get(path)
     path = path.sub(/\A\/*/, '')
     url = "https://www.pivotaltracker.com/services/v5/#{path}"
-    $DEBUG and warn "Fetching #{url.inspect}"
+    @debug and STDERR.puts "Fetching #{url.inspect}"
     open(url,
          'X-TrackerToken' => pivotal_token,
          'Content-Type'   => 'application/xml',
@@ -215,7 +218,7 @@ class Git::Story::App
 
   def stories
     sh 'git remote prune origin', error: false
-    `git branch -r | grep -e '^ *origin/'`.lines.map do |l|
+    capture("git branch -r | grep -e '^ *origin/'").lines.map do |l|
       b = l.strip
       b_base = File.basename(b)
       if b_base =~ BRANCH_NAME_REGEX
@@ -229,7 +232,7 @@ class Git::Story::App
   end
 
   def current_branch
-    `git rev-parse --abbrev-ref HEAD`.strip
+    capture("git rev-parse --abbrev-ref HEAD").strip
   end
 
   def check_current
