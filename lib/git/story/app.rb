@@ -55,16 +55,22 @@ class Git::Story::App
     current_branch
   end
 
-  def create_name(story_id = nil)
+  def provide_name(story_id = nil)
     until story_id.present?
       story_id = ask(prompt: 'Story id? ').strip
     end
     story_id = story_id.gsub(/[^0-9]+/, '')
-    stories
     @story_id = Integer(story_id)
+    if stories.any? { |s| s.story_id == @story_id }
+      @reason = "story for ##@story_id already created"
+      return
+    end
     if name = fetch_story_name(@story_id)
       name = name.downcase.gsub(/[^a-z0-9-]+/, '-').gsub(/(\A-*|[\-0-9]*\z)/, '')
       [ 'story', name, @story_id ] * ?_
+    else
+      @reason = "name for ##@story_id could not be fetched from tracker"
+      return
     end
   end
 
@@ -121,8 +127,8 @@ class Git::Story::App
   command doc: '[STORYID] create a story for story STORYID'
   def create(story_id = nil)
     sh 'git fetch'
-    name = create_name(story_id) or
-      error "Could not create a story name for story id #{story_id}"
+    name = provide_name(story_id) or
+      error "Cannot provide a new story name for story ##{story_id}: #{@reason.inspect}"
     if old_story = stories.find { |s| s.story_id == @story_id }
       error "story ##{@story_id} already exists in #{old_story}".red
     end

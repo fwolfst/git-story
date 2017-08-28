@@ -1,5 +1,5 @@
 require 'spec_helper'
 
-describe Git::Story::Feature do
+describe Git::Story::App do
   it 'foos'
 end
