@@ -212,6 +212,7 @@ class Git::Story::App
     end
   end
 
+  memoize method:
   def fetch_tags
     sh 'git fetch --tags'
   end

@@ -18,6 +18,7 @@ GemHadar do
   executables << 'git-story'
 
   dependency 'tins'
+  dependency 'mize'
   dependency 'term-ansicolor'
   dependency 'complex_config'
 
