@@ -67,7 +67,11 @@ class Git::Story::App
       return
     end
     if name = fetch_story_name(@story_id)
-      [ 'story', normalize_name(name), @story_id ] * ?_
+      name = normalize_name(
+        name,
+        max_size: 128 - 'story'.size - @story_id.to_s.size - 2 * ?_.size
+      ).full? || name
+      [ 'story', name, @story_id ] * ?_
     else
       @reason = "name for ##@story_id could not be fetched from tracker"
       return
@@ -171,12 +175,14 @@ class Git::Story::App
 
   private
 
-  def normalize_name(name)
+  def normalize_name(name, max_size: nil)
     name = name.downcase
     name = name.tr('äöü', 'aou').tr(?ß, 'ss')
     name = name.gsub(/[^a-z0-9-]+/, '-')
     name = name.gsub(/(\A-*|[\-0-9]*\z)/, '')
     name = name.gsub(/-+/, ?-)
+    max_size and name = name[0, max_size]
+    name
   end
 
   def apply_pattern(pattern, stories)
