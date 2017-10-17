@@ -1,3 +1,5 @@
+require 'time'
+
 class Git::Story::App
   class ::String
     include Term::ANSIColor
@@ -18,6 +20,10 @@ class Git::Story::App
     attr_accessor :story_base_name
 
     attr_accessor :story_id
+
+    attr_accessor :story_created_at
+
+    attr_accessor :story_author
   end
 
   def initialize(argv = ARGV, debug: ENV['DEBUG'].to_i == 1)
@@ -78,11 +84,21 @@ class Git::Story::App
     end
   end
 
-  command doc: 'list all stories'
-  def list(mark_red: current(check: false))
+  command doc: '[AUTHOR] list all stories'
+  def list(author = nil, mark_red: current(check: false))
     stories.map { |b|
+      next if author && !b.story_author.include?(author)
       (bn = b.story_base_name) == mark_red ? bn.red : bn.green
-    }
+    }.compact
+  end
+
+  command doc: '[AUTHOR] list all stories with details'
+  def list_details(author = nil, mark_red: current(check: false))
+    stories.sort_by { |b| -b.story_created_at.to_f }.map { |b|
+      next if author && !b.story_author.include?(author)
+      name = (bn = b.story_base_name) == mark_red ? bn.red : bn.green
+      "#{name} #{b.story_author} #{b.story_created_at.iso8601.yellow}"
+    }.compact
   end
 
   command doc: 'list all production deploy tags'
@@ -232,17 +248,25 @@ class Git::Story::App
 
   def stories
     sh 'git remote prune origin', error: false
-    capture("git branch -r | grep -e '^ *origin/'").lines.map do |l|
-      b = l.strip
-      b_base = File.basename(b)
-      if b_base =~ BRANCH_NAME_REGEX
-        b.extend StoryAccessors
-        b.story_base_name = b_base
-        b.story_name = $1
-        b.story_id = $2.to_i
-        b
-      end
-    end.compact
+    refs = capture("git for-each-ref --format='%(refname);%(committerdate);%(authorname) %(authoremail)'")
+    refs = refs.lines.map { |l|
+      r = l.chomp.split(?;)
+      next unless r[0] =~ %r(/origin/)
+      r[0] = File.basename(r[0])
+      next unless r[0] =~ BRANCH_NAME_REGEX
+      r[1] = Time.parse(r[1])
+      r
+    }.compact.map do |r|
+      b = r[0]
+      b =~ BRANCH_NAME_REGEX
+      b.extend StoryAccessors
+      b.story_base_name = r[0]
+      b.story_name = $1
+      b.story_id = $2.to_i
+      b.story_created_at = r[1]
+      b.story_author = r[2]
+      b
+    end
   end
 
   def current_branch
