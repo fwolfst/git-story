@@ -1,4 +1,5 @@
 require 'time'
+require 'open-uri'
 
 class Git::Story::App
   class ::String
@@ -82,6 +83,32 @@ class Git::Story::App
       @reason = "name for ##@story_id could not be fetched from tracker"
       return
     end
+  end
+
+  command doc: '[BRANCH] display build status of branch'
+  def build_status(branch = current(check: false))
+    auth_token = complex_config.story.semaphore_auth_token
+    project    = complex_config.story.semaphore_project
+    url        = "https://semaphoreci.com/api/v1/projects/#{project}/#{branch}/status?auth_token=#{auth_token}"
+    Git::Story::SemaphoreResponse.get(url)
+  rescue => e
+    "Getting #{url.inspect} => #{e.class}: #{e}".red
+  end
+
+  command doc: '[SERVER] display deploy status of branch'
+  def deploy_status(server = complex_config.story.semaphore_default_server)
+    auth_token = complex_config.story.semaphore_auth_token
+    project    = complex_config.story.semaphore_project
+    url        = "https://semaphoreci.com/api/v1/projects/#{project}/servers/#{server}?auth_token=#{auth_token}"
+    deploys  = Git::Story::SemaphoreResponse.get(url).deploys
+    upcoming = deploys.select(&:pending?)&.last
+    current  = deploys.find(&:passed?)
+    <<~end
+      Upcoming: #{upcoming}
+      Current: #{current}
+    end
+  rescue => e
+    "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
 
   command doc: '[AUTHOR] list all stories'

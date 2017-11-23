@@ -1,19 +1,19 @@
 # -*- encoding: utf-8 -*-
-# stub: git-story-workflow 0.0.7 ruby lib
+# stub: git-story-workflow 0.1.0 ruby lib
 
 Gem::Specification.new do |s|
   s.name = "git-story-workflow".freeze
-  s.version = "0.0.7"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Florian Frank".freeze]
-  s.date = "2017-10-17"
+  s.date = "2017-11-23"
   s.description = "Gem abstracting a git workflow\u2026".freeze
   s.email = "flori@ping.de".freeze
   s.executables = ["git-story".freeze]
-  s.extra_rdoc_files = ["README.md".freeze, "lib/git/story.rb".freeze, "lib/git/story/app.rb".freeze, "lib/git/story/setup.rb".freeze, "lib/git/story/utils.rb".freeze, "lib/git/story/version.rb".freeze]
-  s.files = [".gitignore".freeze, "COPYING".freeze, "Gemfile".freeze, "README.md".freeze, "Rakefile".freeze, "VERSION".freeze, "bin/git-story".freeze, "config/story.yml".freeze, "git-story-workflow.gemspec".freeze, "lib/git/story.rb".freeze, "lib/git/story/app.rb".freeze, "lib/git/story/prepare-commit-msg".freeze, "lib/git/story/setup.rb".freeze, "lib/git/story/utils.rb".freeze, "lib/git/story/version.rb".freeze, "spec/git/story/app_spec.rb".freeze, "spec/spec_helper.rb".freeze]
+  s.extra_rdoc_files = ["README.md".freeze, "lib/git/story.rb".freeze, "lib/git/story/app.rb".freeze, "lib/git/story/semaphore.rb".freeze, "lib/git/story/setup.rb".freeze, "lib/git/story/utils.rb".freeze, "lib/git/story/version.rb".freeze]
+  s.files = [".gitignore".freeze, "COPYING".freeze, "Gemfile".freeze, "README.md".freeze, "Rakefile".freeze, "VERSION".freeze, "bin/git-story".freeze, "config/story.yml".freeze, "git-story-workflow.gemspec".freeze, "lib/git/story.rb".freeze, "lib/git/story/app.rb".freeze, "lib/git/story/prepare-commit-msg".freeze, "lib/git/story/semaphore.rb".freeze, "lib/git/story/setup.rb".freeze, "lib/git/story/utils.rb".freeze, "lib/git/story/version.rb".freeze, "spec/git/story/app_spec.rb".freeze, "spec/spec_helper.rb".freeze]
   s.homepage = "http://flori.github.com/git-story-workflow".freeze
   s.licenses = ["Apache-2.0".freeze]
   s.rdoc_options = ["--title".freeze, "Git-story-workflow".freeze, "--main".freeze, "README.md".freeze]

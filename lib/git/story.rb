@@ -21,4 +21,5 @@ end
 require 'git/story/version'
 require 'git/story/utils'
 require 'git/story/setup'
+require 'git/story/semaphore'
 require 'git/story/app'
