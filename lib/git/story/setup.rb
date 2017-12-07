@@ -4,15 +4,14 @@ module Git::Story::Setup
 
   MARKER = 'Installed by the git-story gem'
 
-  PREPARE_COMMIT_MESSAGE_SRC =
-    File.join(File.dirname(__FILE__), 'prepare-commit-msg')
-  PREPARE_COMMIT_MESSAGE_DST =
-    '.git/hooks/prepare-commit-msg'
+  HOOKS_DIR = '.git/hooks'
+  PREPARE_COMMIT_MESSAGE_SRC = File.join(__dir__, 'prepare-commit-msg')
+  PREPARE_COMMIT_MESSAGE_DST = File.join(HOOKS_DIR, 'prepare-commit-msg')
 
   module_function
 
   def perform(force: false)
-    pcm = '.git/hooks/prepare-commit-msg'
+    pcm = PREPARE_COMMIT_MESSAGE_DST
     if File.exist?(pcm)
       if force
         install_prepare_commit_msg
@@ -35,6 +34,7 @@ module Git::Story::Setup
   end
 
   def install_prepare_commit_msg
+    File.exist?(HOOKS_DIR) or mkdir(HOOKS_DIR)
     cp PREPARE_COMMIT_MESSAGE_SRC, PREPARE_COMMIT_MESSAGE_DST
   end
 end
