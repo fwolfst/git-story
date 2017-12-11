@@ -100,10 +100,15 @@ class Git::Story::App
     auth_token = complex_config.story.semaphore_auth_token
     project    = complex_config.story.semaphore_project
     url        = "https://semaphoreci.com/api/v1/projects/#{project}/servers/#{server}?auth_token=#{auth_token}"
-    deploys  = Git::Story::SemaphoreResponse.get(url).deploys
+    server   = Git::Story::SemaphoreResponse.get(url)
+    deploys  = server.deploys
     upcoming = deploys.select(&:pending?)&.last
     current  = deploys.find(&:passed?)
     <<~end
+      Server: #{server.server_name&.green}
+      Branch: #{server.branch_name&.color('#ff5f00')}
+      Semaphore: #{server.server_url}
+      Strategy: #{server.strategy}
       Upcoming: #{upcoming}
       Current: #{current}
     end
