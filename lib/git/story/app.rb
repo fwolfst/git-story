@@ -142,7 +142,7 @@ class Git::Story::App
   end
 
   command doc: 'output the times of all production deploys'
-  def deploys
+  def deploy_list
     deploy_tags.map { |t| format_tag_time(t).green + " #{t.yellow}" }
   end
 
@@ -152,16 +152,16 @@ class Git::Story::App
   end
 
   command doc: 'output the time of the last production deploy'
-  def deploys_last
+  def deploy_last
     tag = deploy_tags_last
     format_tag_time(tag).green + " #{tag.yellow}"
   end
 
   command doc: 'output log of changes since last production deploy tag'
-  def deploy_log
+  def deploy_log(ref = deploy_tags.last, last_ref = nil)
     fetch_tags
     opts = '--pretty=tformat:"%C(yellow)%h%Creset %C(green)%ci%Creset %s (%Cred%an <%ae>%Creset)"'
-    capture("git log #{opts} #{deploy_tags.last}..")
+    capture("git log #{opts} #{ref}..#{last_ref}")
   end
 
   command doc: '[REF] output diff since last production deploy tag'
