@@ -59,8 +59,15 @@ class Git::Story::App
 
   command doc: 'output the current story branch if it is checked out'
   def current(check: true)
-    check and check_current
-    current_branch
+    if check
+      if cb = current_branch_checked?
+        cb
+      else
+        error 'Switch to a story branch first for this operation!'
+      end
+    else
+      current_branch
+    end
   end
 
   def provide_name(story_id = nil)
@@ -114,6 +121,36 @@ class Git::Story::App
     end
   rescue => e
     "Getting #{url.inspect} => #{e.class}: #{e}".red
+  end
+
+  command doc: '[STORY_ID] fetch status of current story'
+  def status(story_id = current(check: true)&.[](/_(\d+)\z/, 1)&.to_i)
+    if story = fetch_story(story_id)
+      jj story
+      color_state =
+        case cs = story.current_state
+        when 'unscheduled', 'planned', 'unstarted'
+          cs
+        when 'rejected'
+          cs.white.on_red
+        when 'accepted'
+          cs.green
+        else
+          cs.yellow
+        end
+      <<~end
+        Id: #{story.id}
+        Name: #{story.name.inspect.bold}
+        Type: #{story.story_type}
+        Estimate: #{story.estimate.to_s.yellow.bold}
+        State: #{color_state}
+        Branch: #{current_branch_checked?&.color('#ff5f00')}
+        Pivotal: #{story.url}
+        Labels: #{story.labels.map(&:name) * ?,}
+      end
+    end
+  rescue => e
+    "Getting pivotal story status => #{e.class}: #{e}".red
   end
 
   command doc: '[AUTHOR] list all stories'
@@ -252,9 +289,11 @@ class Git::Story::App
   end
 
   def fetch_story_name(story_id)
-    if story = pivotal_get("projects/#{pivotal_project}/stories/#{story_id}")
-      story_name = story.name.full? or return
-    end
+    fetch_story(story_id)&.name
+  end
+
+  def fetch_story(story_id)
+    pivotal_get("projects/#{pivotal_project}/stories/#{story_id}").full?
   end
 
   def pivotal_get(path)
@@ -278,36 +317,40 @@ class Git::Story::App
     sh 'git fetch --tags'
   end
 
+  def apply_story_accessors(ref)
+    branch =~ BRANCH_NAME_REGEX or return
+    branch.extend StoryAccessors
+    branch.story_base_name = ref[0]
+    branch.story_name = $1
+    branch.story_id = $2.to_i
+    branch.story_created_at = ref[1]
+    branch.story_author = ref[2]
+    branch
+  end
+
   def stories
     sh 'git remote prune origin', error: false
     refs = capture("git for-each-ref --format='%(refname);%(committerdate);%(authorname) %(authoremail)'")
     refs = refs.lines.map { |l|
-      r = l.chomp.split(?;)
-      next unless r[0] =~ %r(/origin/)
-      r[0] = File.basename(r[0])
-      next unless r[0] =~ BRANCH_NAME_REGEX
-      r[1] = Time.parse(r[1])
-      r
-    }.compact.map do |r|
-      b = r[0]
-      b =~ BRANCH_NAME_REGEX
-      b.extend StoryAccessors
-      b.story_base_name = r[0]
-      b.story_name = $1
-      b.story_id = $2.to_i
-      b.story_created_at = r[1]
-      b.story_author = r[2]
-      b
-    end
+      ref = l.chomp.split(?;)
+      next unless ref[0] =~ %r(/origin/)
+      ref[0] = File.basename(ref[0])
+      next unless ref[0] =~ BRANCH_NAME_REGEX
+      ref[1] = Time.parse(ref[1])
+      ref
+    }.compact.map do |ref|
+      apply_story_accessors ref
+    end.compact
   end
 
   def current_branch
     capture("git rev-parse --abbrev-ref HEAD").strip
   end
 
-  def check_current
-    current_branch =~ BRANCH_NAME_REGEX or
-      error 'Switch to a story branch first for this operation!'
+  def current_branch_checked?
+    if (cb = current_branch) =~ BRANCH_NAME_REGEX
+      cb
+    end
   end
 
   def format_tag_time(tag)
