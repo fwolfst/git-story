@@ -126,7 +126,6 @@ class Git::Story::App
   command doc: '[STORY_ID] fetch status of current story'
   def status(story_id = current(check: true)&.[](/_(\d+)\z/, 1)&.to_i)
     if story = fetch_story(story_id)
-      jj story
       color_state =
         case cs = story.current_state
         when 'unscheduled', 'planned', 'unstarted'
@@ -318,6 +317,7 @@ class Git::Story::App
   end
 
   def apply_story_accessors(ref)
+    branch = ref[0]
     branch =~ BRANCH_NAME_REGEX or return
     branch.extend StoryAccessors
     branch.story_base_name = ref[0]
