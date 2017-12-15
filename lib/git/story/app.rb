@@ -146,6 +146,7 @@ class Git::Story::App
         Branch: #{current_branch_checked?&.color('#ff5f00')}
         Pivotal: #{story.url}
         Labels: #{story.labels.map(&:name) * ?,}
+        Github: #{github_url(current_branch_checked?)}
       end
     end
   rescue => e
@@ -359,5 +360,16 @@ class Git::Story::App
       day  = Time::RFC2822_DAY_NAME[time.wday]
       "#{time.iso8601} #{day}"
     end
+  end
+
+  def remote_url(name = 'origin')
+    capture("git remote -v").lines.grep(/^#{name}/).first&.split(/\s+/).full?(:[], 1)
+  end
+
+  def github_url(branch)
+    branch.full? or return
+    url = remote_url('github') || remote_url or return
+    url = url.sub('git@github.com:', 'https://github.com/')
+    url = url.sub(/(\.git)\z/, "/tree/#{branch}")
   end
 end
