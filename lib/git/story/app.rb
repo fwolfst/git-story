@@ -137,15 +137,26 @@ class Git::Story::App
         else
           cs.yellow
         end
+      color_type =
+        case t = story.story_type
+        when 'bug'
+          t.red.bold
+        when 'feature'
+          t.yellow.bold
+        when 'chore'
+          t.white.bold
+        else
+          t
+        end
       <<~end
-        Id: #{story.id}
+        Id: #{(?# + story.id.to_s).green}
         Name: #{story.name.inspect.bold}
-        Type: #{story.story_type}
+        Type: #{color_type}
         Estimate: #{story.estimate.to_s.yellow.bold}
         State: #{color_state}
         Branch: #{current_branch_checked?&.color('#ff5f00')}
+        Labels: #{story.labels.map(&:name).join(' ').on_color(91)}
         Pivotal: #{story.url}
-        Labels: #{story.labels.map(&:name) * ?,}
         Github: #{github_url(current_branch_checked?)}
       end
     end
@@ -256,6 +267,19 @@ class Git::Story::App
       end
     end
   rescue Interrupt
+  end
+
+  command doc: '[BRANCH] open branch on github'
+  def github(branch = current(check: false))
+    system "open #{github_url(branch).inspect}"
+  end
+
+  command doc: '[BRANCH] open branch on github'
+  def pivotal(branch = current(check: true))
+    if story_id = branch&.[](/_(\d+)\z/, 1)&.to_i
+      story_url = fetch_story(story_id)&.url
+      system "open #{story_url}"
+    end
   end
 
   private
