@@ -277,7 +277,7 @@ class Git::Story::App
     nil
   end
 
-  command doc: '[BRANCH] open branch on github'
+  command doc: '[BRANCH] open branch on pivotaltracker'
   def pivotal(branch = current(check: true))
     if story_id = branch&.[](/_(\d+)\z/, 1)&.to_i
       story_url = fetch_story(story_id)&.url
