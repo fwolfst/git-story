@@ -271,7 +271,10 @@ class Git::Story::App
 
   command doc: '[BRANCH] open branch on github'
   def github(branch = current(check: false))
-    system "open #{github_url(branch).inspect}"
+    if url = github_url(branch)
+      system "open #{url.inspect}"
+    end
+    nil
   end
 
   command doc: '[BRANCH] open branch on github'
@@ -280,6 +283,7 @@ class Git::Story::App
       story_url = fetch_story(story_id)&.url
       system "open #{story_url}"
     end
+    nil
   end
 
   private
