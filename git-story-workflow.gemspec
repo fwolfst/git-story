@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Florian Frank".freeze]
-  s.date = "2018-01-03"
+  s.date = "2018-01-17"
   s.description = "Gem abstracting a git workflow\u2026".freeze
   s.email = "flori@ping.de".freeze
   s.executables = ["git-story".freeze]

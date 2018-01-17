@@ -34,7 +34,7 @@ module Git::Story::Setup
   end
 
   def install_prepare_commit_msg
-    File.exist?(HOOKS_DIR) or mkdir(HOOKS_DIR)
+    File.exist?(HOOKS_DIR) or mkdir_p(HOOKS_DIR)
     cp PREPARE_COMMIT_MESSAGE_SRC, PREPARE_COMMIT_MESSAGE_DST
   end
 end
