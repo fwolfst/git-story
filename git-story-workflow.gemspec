@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Florian Frank".freeze]
-  s.date = "2018-01-17"
+  s.date = "2018-02-12"
   s.description = "Gem abstracting a git workflow\u2026".freeze
   s.email = "flori@ping.de".freeze
   s.executables = ["git-story".freeze]
@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rake>.freeze, [">= 0"])
       s.add_development_dependency(%q<simplecov>.freeze, [">= 0"])
       s.add_development_dependency(%q<rspec>.freeze, [">= 0"])
+      s.add_runtime_dependency(%q<infobar>.freeze, [">= 0"])
       s.add_runtime_dependency(%q<tins>.freeze, [">= 0"])
       s.add_runtime_dependency(%q<mize>.freeze, [">= 0"])
       s.add_runtime_dependency(%q<term-ansicolor>.freeze, [">= 0"])
@@ -38,6 +39,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rake>.freeze, [">= 0"])
       s.add_dependency(%q<simplecov>.freeze, [">= 0"])
       s.add_dependency(%q<rspec>.freeze, [">= 0"])
+      s.add_dependency(%q<infobar>.freeze, [">= 0"])
       s.add_dependency(%q<tins>.freeze, [">= 0"])
       s.add_dependency(%q<mize>.freeze, [">= 0"])
       s.add_dependency(%q<term-ansicolor>.freeze, [">= 0"])
@@ -48,6 +50,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rake>.freeze, [">= 0"])
     s.add_dependency(%q<simplecov>.freeze, [">= 0"])
     s.add_dependency(%q<rspec>.freeze, [">= 0"])
+    s.add_dependency(%q<infobar>.freeze, [">= 0"])
     s.add_dependency(%q<tins>.freeze, [">= 0"])
     s.add_dependency(%q<mize>.freeze, [">= 0"])
     s.add_dependency(%q<term-ansicolor>.freeze, [">= 0"])

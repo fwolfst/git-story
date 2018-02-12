@@ -17,6 +17,7 @@ GemHadar do
   title       name.camelize
   executables << 'git-story'
 
+  dependency 'infobar'
   dependency 'tins'
   dependency 'mize'
   dependency 'term-ansicolor'

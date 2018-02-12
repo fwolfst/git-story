@@ -97,7 +97,7 @@ class Git::Story::App
     auth_token = complex_config.story.semaphore_auth_token
     project    = complex_config.story.semaphore_project
     url        = "https://semaphoreci.com/api/v1/projects/#{project}/#{branch}/status?auth_token=#{auth_token}"
-    Git::Story::SemaphoreResponse.get(url)
+    Git::Story::SemaphoreResponse.get(url, debug: @debug)
   rescue => e
     "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
@@ -107,7 +107,7 @@ class Git::Story::App
     auth_token = complex_config.story.semaphore_auth_token
     project    = complex_config.story.semaphore_project
     url        = "https://semaphoreci.com/api/v1/projects/#{project}/servers/#{server}?auth_token=#{auth_token}"
-    server   = Git::Story::SemaphoreResponse.get(url)
+    server   = Git::Story::SemaphoreResponse.get(url, debug: @debug)
     deploys  = server.deploys
     upcoming = deploys.select(&:pending?)&.last
     current  = deploys.find(&:passed?)
