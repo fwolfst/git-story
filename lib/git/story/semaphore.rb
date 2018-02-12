@@ -1,12 +1,15 @@
 require 'json'
 require 'time'
 require 'open-uri'
+require 'infobar'
 
 class Git::Story::SemaphoreResponse < JSON::GenericObject
   def self.get(url, debug: false)
     data = open(url).read
     debug and STDERR.puts JSON.pretty_generate(JSON(data))
-    JSON(data, object_class: self)
+    result = JSON(data, object_class: self)
+    result.debug = debug
+    result
   end
 
   def duration(time = nil)
@@ -56,6 +59,25 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
     branch_name || server_name
   end
 
+  def branch_history
+    if branch_history_url
+      self.class.get(branch_history_url, debug: debug)&.builds
+    else
+      []
+    end
+  end
+
+  def estimated_duration
+    times = branch_history.select { |b| b.result == 'passed' }.map { |b|
+      Time.parse(b.finished_at) - Time.parse(b.started_at)
+    }
+    if times.empty?
+      duration
+    else
+      times.sum / times.size
+    end.to_f
+  end
+
   def to_s
     r = case
         when pending? && building?
@@ -69,9 +91,17 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
         else
           "#{entity_name} ##{sha1} in state #{result}".blue
         end
+    r = StringIO.new(r)
+    Infobar(
+      current: duration.to_f.to_i,
+      total: estimated_duration.to_i,
+      message: ' %l %c/%t seconds ',
+      output: r
+    ).update
     r <<
       "\n  Semaphore: #{entity_url}" <<
       "\n  Commit: #{commit.url}" <<
       "\n  Authored: #{(commit.author_name + ' <' + commit.author_email + ?>).bold} @#{commit.timestamp}"
+    r.tap(&:rewind).read
   end
 end
