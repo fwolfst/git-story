@@ -110,7 +110,11 @@ class Git::Story::App
     server   = Git::Story::SemaphoreResponse.get(url, debug: @debug)
     deploys  = server.deploys
     upcoming = deploys.select(&:pending?)&.last
-    current  = deploys.find(&:passed?)
+    passed = deploys.select(&:passed?)
+    current  = passed.first
+    if !passed.empty? && upcoming
+      upcoming.estimated_duration = passed.sum { |d| d.duration.to_f } / passed.size
+    end
     <<~end
       Server: #{server.server_name&.green}
       Branch: #{server.branch_name&.color('#ff5f00')}

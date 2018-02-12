@@ -20,7 +20,11 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
         time = Time.parse(finished_at)
       end
     end
-    Tins::Duration.new(time - Time.parse(started_at))
+    if started_at
+      Tins::Duration.new(time - Time.parse(started_at))
+    else
+      Tins::Duration.new(0)
+    end
   end
 
   def pending?
@@ -68,14 +72,18 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
   end
 
   def estimated_duration
-    times = branch_history.select { |b| b.result == 'passed' }.map { |b|
-      Time.parse(b.finished_at) - Time.parse(b.started_at)
-    }
-    if times.empty?
-      duration
+    if ed = super
+      ed
     else
-      times.sum / times.size
-    end.to_f
+      times = branch_history.select(&:passed?).map { |b|
+        Time.parse(b.finished_at) - Time.parse(b.started_at)
+      }
+      if times.empty?
+        duration
+      else
+        times.sum / times.size
+      end.to_f
+    end
   end
 
   def to_s
