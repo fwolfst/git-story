@@ -6,7 +6,6 @@ class Git::Story::App
     include Term::ANSIColor
   end
 
-  include Tins::GO
   include Git::Story::Utils
   extend Git::Story::Utils
   include ComplexConfig::Provider::Shortcuts
@@ -92,11 +91,21 @@ class Git::Story::App
     end
   end
 
-  command doc: '[BRANCH] display build status of branch'
-  def build_status(branch = current(check: false))
+  command doc: '[BRANCH] display test status of branch'
+  def test_status(branch = current(check: false))
     auth_token = complex_config.story.semaphore_auth_token
-    project    = complex_config.story.semaphore_project
+    project    = complex_config.story.semaphore_test_project
     url        = "https://semaphoreci.com/api/v1/projects/#{project}/#{branch}/status?auth_token=#{auth_token}"
+    Git::Story::SemaphoreResponse.get(url, debug: @debug)
+  rescue => e
+    "Getting #{url.inspect} => #{e.class}: #{e}".red
+  end
+
+  command doc: '[BRANCH] display docker build status of branch'
+  def docker_status
+    auth_token = complex_config.story.semaphore_auth_token
+    project    = complex_config.story.semaphore_docker_project
+    url        = "https://semaphoreci.com/api/v1/projects/#{project}/docker/status?auth_token=#{auth_token}"
     Git::Story::SemaphoreResponse.get(url, debug: @debug)
   rescue => e
     "Getting #{url.inspect} => #{e.class}: #{e}".red
@@ -105,7 +114,7 @@ class Git::Story::App
   command doc: '[SERVER] display deploy status of branch'
   def deploy_status(server = complex_config.story.semaphore_default_server)
     auth_token = complex_config.story.semaphore_auth_token
-    project    = complex_config.story.semaphore_project
+    project    = complex_config.story.semaphore_docker_project
     url        = "https://semaphoreci.com/api/v1/projects/#{project}/servers/#{server}?auth_token=#{auth_token}"
     server   = Git::Story::SemaphoreResponse.get(url, debug: @debug)
     deploys  = server.deploys
@@ -120,12 +129,27 @@ class Git::Story::App
       Branch: #{server.branch_name&.color('#ff5f00')}
       Semaphore: #{server.server_url}
       Strategy: #{server.strategy}
-      Upcoming: #{upcoming}
-      Current: #{current}
+      Upcoming:
+      #{upcoming}
+      Current:
+      #{current}
     end
   rescue => e
     "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
+
+  command doc: '[BRANCH] display build status for branch'
+  def build_status(branch = current(check: false))
+    [
+      "Test Status".bold,
+      test_status(branch) || 'n/a',
+      "Docker Status".bold,
+      docker_status       || 'n/a',
+      "Deploy Status".bold,
+      deploy_status       || 'n/a',
+    ] * "\n\n"
+  end
+
 
   command doc: '[STORY_ID] fetch status of current story'
   def status(story_id = current(check: true)&.[](/_(\d+)\z/, 1)&.to_i)
