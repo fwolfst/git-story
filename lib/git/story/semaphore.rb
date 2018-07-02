@@ -108,7 +108,7 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
     ).update
     r <<
       "\n  Semaphore: #{entity_url}" <<
-      "\n  Commit: #{commit.url}" <<
+      "\n  Commit: #{commit.url}\n#{commit.message&.gsub(/^/, " " * 10)&.color(33)}" <<
       "\n  Authored: #{(commit.author_name + ' <' + commit.author_email + ?>).bold} @#{commit.timestamp}"
     r.tap(&:rewind).read
   end
