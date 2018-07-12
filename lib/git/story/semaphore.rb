@@ -100,9 +100,16 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
           "#{entity_name} ##{sha1} in state #{result}".blue
         end
     r = StringIO.new(r)
+    duration_seconds = duration.to_f.to_i
+    total_seconds =
+      if passed? || failed?
+        [ estimated_duration.to_i, duration_seconds ].min
+      else
+        estimated_duration.to_i
+      end
     Infobar(
-      current: duration.to_f.to_i,
-      total: estimated_duration.to_i,
+      current: duration_seconds,
+      total: total_seconds,
       message: ' %l %c/%t seconds ',
       output: r
     ).update
