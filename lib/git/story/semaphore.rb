@@ -101,12 +101,11 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
         end
     r = StringIO.new(r)
     duration_seconds = duration.to_f.to_i
-    total_seconds =
-      if passed? || failed?
-        [ estimated_duration.to_i, duration_seconds ].min
-      else
-        estimated_duration.to_i
-      end
+    if passed? || failed?
+      total_seconds = duration_seconds
+    else
+      total_seconds = estimated_duration.to_i
+    end
     Infobar(
       current: duration_seconds,
       total: total_seconds,

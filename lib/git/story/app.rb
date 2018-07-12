@@ -1,5 +1,6 @@
 require 'time'
 require 'open-uri'
+require 'tins/go'
 
 class Git::Story::App
   class ::String
@@ -9,6 +10,7 @@ class Git::Story::App
   include Git::Story::Utils
   extend Git::Story::Utils
   include ComplexConfig::Provider::Shortcuts
+  include Tins::GO
 
   annotate :command
 
@@ -26,8 +28,9 @@ class Git::Story::App
     attr_accessor :story_author
   end
 
-  def initialize(argv = ARGV, debug: ENV['DEBUG'].to_i == 1)
+  def initialize(argv = ARGV.dup, debug: ENV['DEBUG'].to_i == 1)
     @argv    = argv
+    @opts    = go 'n:', @argv
     @command = @argv.shift&.to_sym
     @debug   = debug
   end
@@ -93,46 +96,52 @@ class Git::Story::App
 
   command doc: '[BRANCH] display test status of branch'
   def test_status(branch = current(check: false))
-    auth_token = complex_config.story.semaphore_auth_token
-    project    = complex_config.story.semaphore_test_project
-    url        = "https://semaphoreci.com/api/v1/projects/#{project}/#{branch}/status?auth_token=#{auth_token}"
-    Git::Story::SemaphoreResponse.get(url, debug: @debug)
+    watch do
+      auth_token = complex_config.story.semaphore_auth_token
+      project    = complex_config.story.semaphore_test_project
+      url        = "https://semaphoreci.com/api/v1/projects/#{project}/#{branch}/status?auth_token=#{auth_token}"
+      Git::Story::SemaphoreResponse.get(url, debug: @debug)
+    end
   rescue => e
     "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
 
   command doc: '[BRANCH] display docker build status of branch'
   def docker_status
-    auth_token = complex_config.story.semaphore_auth_token
-    project    = complex_config.story.semaphore_docker_project
-    url        = "https://semaphoreci.com/api/v1/projects/#{project}/docker/status?auth_token=#{auth_token}"
-    Git::Story::SemaphoreResponse.get(url, debug: @debug)
+    watch do
+      auth_token = complex_config.story.semaphore_auth_token
+      project    = complex_config.story.semaphore_docker_project
+      url        = "https://semaphoreci.com/api/v1/projects/#{project}/docker/status?auth_token=#{auth_token}"
+      Git::Story::SemaphoreResponse.get(url, debug: @debug)
+    end
   rescue => e
     "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
 
   command doc: '[SERVER] display deploy status of branch'
   def deploy_status(server = complex_config.story.semaphore_default_server)
-    auth_token = complex_config.story.semaphore_auth_token
-    project    = complex_config.story.semaphore_docker_project
-    url        = "https://semaphoreci.com/api/v1/projects/#{project}/servers/#{server}?auth_token=#{auth_token}"
-    server   = Git::Story::SemaphoreResponse.get(url, debug: @debug)
-    deploys  = server.deploys
-    upcoming = deploys.select(&:pending?)&.last
-    passed = deploys.select(&:passed?)
-    current  = passed.first
-    if !passed.empty? && upcoming
-      upcoming.estimated_duration = passed.sum { |d| d.duration.to_f } / passed.size
-    end
-    <<~end
-      Server: #{server.server_name&.green}
-      Branch: #{server.branch_name&.color('#ff5f00')}
-      Semaphore: #{server.server_url}
-      Strategy: #{server.strategy}
-      Upcoming:
-      #{upcoming}
-      Current:
-      #{current}
+    watch do
+      auth_token = complex_config.story.semaphore_auth_token
+      project    = complex_config.story.semaphore_docker_project
+      url        = "https://semaphoreci.com/api/v1/projects/#{project}/servers/#{server}?auth_token=#{auth_token}"
+      server   = Git::Story::SemaphoreResponse.get(url, debug: @debug)
+      deploys  = server.deploys
+      upcoming = deploys.select(&:pending?)&.last
+      passed = deploys.select(&:passed?)
+      current  = passed.first
+      if !passed.empty? && upcoming
+        upcoming.estimated_duration = passed.sum { |d| d.duration.to_f } / passed.size
+      end
+      <<~end
+        Server: #{server.server_name&.green}
+        Branch: #{server.branch_name&.color('#ff5f00')}
+        Semaphore: #{server.server_url}
+        Strategy: #{server.strategy}
+        Upcoming:
+        #{upcoming}
+        Current:
+        #{current}
+      end
     end
   rescue => e
     "Getting #{url.inspect} => #{e.class}: #{e}".red
@@ -140,14 +149,16 @@ class Git::Story::App
 
   command doc: '[BRANCH] display build status for branch'
   def build_status(branch = current(check: false))
-    [
-      "Test Status".bold,
-      test_status(branch) || 'n/a',
-      "Docker Status".bold,
-      docker_status       || 'n/a',
-      "Deploy Status".bold,
-      deploy_status       || 'n/a',
-    ] * "\n\n"
+    watch do
+      [
+        "Test Status".bold,
+        test_status(branch) || 'n/a',
+        "Docker Status".bold,
+        docker_status       || 'n/a',
+        "Deploy Status".bold,
+        deploy_status       || 'n/a',
+      ] * "\n\n"
+    end
   end
 
 
@@ -315,6 +326,29 @@ class Git::Story::App
   end
 
   private
+
+  def watch(&block)
+    if seconds = @opts[?n]&.to_i and !@watching
+      @watching = true
+      if seconds == 0
+        seconds = 60
+      end
+      loop do
+        r = block.()
+        system('clear')
+        start = Time.now
+        puts r
+        refresh_at = start + seconds
+        duration = refresh_at - start
+        if duration > 0
+          puts "<<< #{Time.now.iso8601} Refresh every #{seconds} seconds >>>".rjust(Tins::Terminal.cols)
+          sleep duration
+        end
+      end
+    else
+      block.()
+    end
+  end
 
   def normalize_name(name, max_size: nil)
     name = name.downcase
