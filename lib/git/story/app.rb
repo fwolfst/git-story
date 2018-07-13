@@ -94,7 +94,7 @@ class Git::Story::App
     end
   end
 
-  command doc: '[BRANCH] display test status of branch'
+  command doc: '[BRANCH] display test status of branch, -n SECONDS refreshes'
   def test_status(branch = current(check: false))
     url = nil
     watch do
@@ -107,7 +107,7 @@ class Git::Story::App
     "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
 
-  command doc: '[BRANCH] display docker build status of branch'
+  command doc: '[BRANCH] display docker build status of branch, -n SECONDS refreshes'
   def docker_status
     url = nil
     watch do
@@ -120,7 +120,7 @@ class Git::Story::App
     "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
 
-  command doc: '[SERVER] display deploy status of branch'
+  command doc: '[SERVER] display deploy status of branch, -n SECONDS refreshes'
   def deploy_status(server = complex_config.story.semaphore_default_server)
     url = nil
     watch do
@@ -150,7 +150,7 @@ class Git::Story::App
     "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
 
-  command doc: '[BRANCH] display build status for branch'
+  command doc: '[BRANCH] display build status for branch, -n SECONDS refreshes'
   def build_status(branch = current(check: false))
     watch do
       [
@@ -165,7 +165,7 @@ class Git::Story::App
   end
 
 
-  command doc: '[STORY_ID] fetch status of current story'
+  command doc: '[STORY_ID] fetch status of current story, -n SECONDS refreshes'
   def status(story_id = current(check: true)&.[](/_(\d+)\z/, 1)&.to_i)
     if story = fetch_story(story_id)
       color_state =

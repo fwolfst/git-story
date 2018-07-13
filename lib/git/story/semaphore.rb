@@ -86,6 +86,25 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
     end
   end
 
+  def infobar_style
+    case
+    when passed?, pending?
+      {
+        done_fg_color: '#005f00',
+        done_bg_color: '#00d700',
+        todo_fg_color: '#00d700',
+        todo_bg_color: '#005f00',
+      }
+    else
+      {
+        done_fg_color: '#5f0000',
+        done_bg_color: '#d70000',
+        todo_fg_color: '#d70000',
+        todo_bg_color: '#5f0000',
+      }
+    end
+  end
+
   def to_s
     r = case
         when pending? && building?
@@ -110,6 +129,7 @@ class Git::Story::SemaphoreResponse < JSON::GenericObject
       current: duration_seconds,
       total: total_seconds,
       message: ' %l %c/%t seconds ',
+      style: infobar_style,
       output: r
     ).update
     r <<
