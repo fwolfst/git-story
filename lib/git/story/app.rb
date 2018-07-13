@@ -96,6 +96,7 @@ class Git::Story::App
 
   command doc: '[BRANCH] display test status of branch'
   def test_status(branch = current(check: false))
+    url = nil
     watch do
       auth_token = complex_config.story.semaphore_auth_token
       project    = complex_config.story.semaphore_test_project
@@ -108,6 +109,7 @@ class Git::Story::App
 
   command doc: '[BRANCH] display docker build status of branch'
   def docker_status
+    url = nil
     watch do
       auth_token = complex_config.story.semaphore_auth_token
       project    = complex_config.story.semaphore_docker_project
@@ -120,6 +122,7 @@ class Git::Story::App
 
   command doc: '[SERVER] display deploy status of branch'
   def deploy_status(server = complex_config.story.semaphore_default_server)
+    url = nil
     watch do
       auth_token = complex_config.story.semaphore_auth_token
       project    = complex_config.story.semaphore_docker_project
