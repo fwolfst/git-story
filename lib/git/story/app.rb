@@ -14,7 +14,7 @@ class Git::Story::App
 
   annotate :command
 
-  BRANCH_NAME_REGEX = /\A(?:story|feature)_([a-z0-9-]+)_(\d+)(?:\-[0-9a-f]+)?\z/
+  BRANCH_NAME_REGEX = /\A(story|feature)_([a-z0-9-]+)_(\d+)\z/
 
   module StoryAccessors
     attr_accessor :story_name
@@ -414,9 +414,9 @@ class Git::Story::App
     branch = ref[0]
     branch =~ BRANCH_NAME_REGEX or return
     branch.extend StoryAccessors
-    branch.story_base_name = ref[0]
-    branch.story_name = $1
-    branch.story_id = $2.to_i
+    branch.story_base_name = "#$1_#$2_#$3"
+    branch.story_name = $2
+    branch.story_id = $3.to_i
     branch.story_created_at = ref[1]
     branch.story_author = ref[2]
     branch
