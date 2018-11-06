@@ -29,7 +29,8 @@ class Git::Story::App
   end
 
   def initialize(argv = ARGV.dup, debug: ENV['DEBUG'].to_i == 1)
-    @argv    = argv
+    @rest_argv = (sep = argv.index('--')) ? argv.slice!(sep..-1).tap(&:shift) : []
+    @argv      = argv
     @opts    = go 'n:', @argv
     @command = @argv.shift&.to_sym
     @debug   = debug
@@ -38,7 +39,11 @@ class Git::Story::App
   def run
     Git::Story::Setup.perform
     if command_of(@command)
-      puts __send__(@command, *@argv)
+      if method(@command).parameters.include?(%i[key rest])
+        puts __send__(@command, *@argv, rest: @rest_argv)
+      else
+        puts __send__(@command, *@argv)
+      end
     else
       @command and @command = @command.inspect
       @command ||= 'n/a'
@@ -248,24 +253,27 @@ class Git::Story::App
   end
 
   command doc: 'output log of changes since last production deploy tag'
-  def deploy_log(ref = deploy_tags.last, last_ref = nil)
+  def deploy_log(ref = deploy_tags.last, last_ref = nil, rest: [])
     fetch_tags
-    opts = '--pretty=tformat:"%C(yellow)%h%Creset %C(green)%ci%Creset %s (%Cred%an <%ae>%Creset)"'
+    opts = ([
+      '--color',
+      '--pretty=tformat:"%C(yellow)%h%Creset %C(green)%ci%Creset %s (%Cred%an <%ae>%Creset)"'
+    ] | rest) * ' '
     capture("git log #{opts} #{ref}..#{last_ref}")
   end
 
   command doc: '[REF] output diff since last production deploy tag'
-  def deploy_diff(ref = nil)
+  def deploy_diff(ref = nil, rest: [])
     fetch_tags
-    opts = '-u'
-    capture("git diff --color #{opts} #{ref} #{deploy_tags.last}")
+    opts = (%w[ --color -u ] | rest) * ' '
+    capture("git diff #{opts} #{ref} #{deploy_tags.last}")
   end
 
   command doc: '[REF] output migration diff since last production deploy tag'
-  def deploy_migrate_diff(ref = nil)
+  def deploy_migrate_diff(ref = nil, rest: [])
     fetch_tags
-    opts = '-u'
-    capture("git diff --color #{opts} #{deploy_tags.last} #{ref} -- db/migrate")
+    opts = (%w[ --color -u ] | rest) * ' '
+    capture("git diff #{opts} #{deploy_tags.last} #{ref} -- db/migrate")
   end
 
   command doc: '[STORYID] create a story for story STORYID'
