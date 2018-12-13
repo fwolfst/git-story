@@ -238,7 +238,7 @@ class Git::Story::App
 
   command doc: 'output the times of all production deploys'
   def deploy_list
-    deploy_tags.map { |t| format_tag_time(t).green + " #{t.yellow}" }
+    deploy_tags.map { |t| format_tag(t) }
   end
 
   command doc: 'output the last production deploy tag'
@@ -249,7 +249,7 @@ class Git::Story::App
   command doc: 'output the time of the last production deploy'
   def deploy_last
     tag = deploy_tags_last
-    format_tag_time(tag).green + " #{tag.yellow}"
+    format_tag(tag)
   end
 
   command doc: 'output log of changes since last production deploy tag'
@@ -455,11 +455,21 @@ class Git::Story::App
     end
   end
 
-  def format_tag_time(tag)
+  def tag_time(tag)
     if tag =~ /\d{4}_\d{2}_\d{2}-\d{2}_\d{2}/
       time = Time.strptime($&, '%Y_%m_%d-%H_%M')
+    end
+  end
+
+  def format_tag(tag)
+    if time = tag_time(tag)
       day  = Time::RFC2822_DAY_NAME[time.wday]
-      "#{time.iso8601} #{day}"
+      "%s %s %s %s" % [
+        time.iso8601.green,
+        day.green,
+        tag.to_s.yellow,
+        "was #{Tins::Duration.new((Time.now - time).floor)} ago".green,
+      ]
     end
   end
 

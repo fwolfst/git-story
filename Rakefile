@@ -12,7 +12,7 @@ GemHadar do
   description "#{summary}…"
   test_dir    'spec'
   ignore      '.*.sw[pon]', 'pkg', 'Gemfile.lock', 'coverage', '.rvmrc',
-    '.AppleDouble', 'tags', '.byebug_history', 'errors.lst'
+    '.AppleDouble', 'tags', '.byebug_history', 'errors.lst', '.DS_Store'
   readme      'README.md'
   title       name.camelize
   executables << 'git-story'
