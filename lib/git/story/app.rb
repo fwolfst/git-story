@@ -231,9 +231,7 @@ class Git::Story::App
   command doc: 'list all production deploy tags'
   def deploy_tags
     fetch_tags
-    capture(
-      "git tag | grep ^#{complex_config.story.deploy_tag_prefix} | sort"
-    ).lines.map(&:chomp)
+    capture(tags).lines.map(&:chomp)
   end
 
   command doc: 'output the times of all production deploys'
@@ -337,6 +335,14 @@ class Git::Story::App
   end
 
   private
+
+  def tags
+    if command = complex_config.story.deploy_tag_command?
+      command
+    else
+      "git tag | grep ^#{complex_config.story.deploy_tag_prefix} | sort"
+    end
+  end
 
   def watch(&block)
     if seconds = @opts[?n]&.to_i and !@watching
@@ -456,10 +462,13 @@ class Git::Story::App
   end
 
   def format_tag_time(tag)
-    if tag =~ /\d{4}_\d{2}_\d{2}-\d{2}_\d{2}/
+    case tag
+    when /\d{4}_\d{2}_\d{2}-\d{2}_\d{2}/
       time = Time.strptime($&, '%Y_%m_%d-%H_%M')
       day  = Time::RFC2822_DAY_NAME[time.wday]
       "#{time.iso8601} #{day}"
+    else
+      tag
     end
   end
 
