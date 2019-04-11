@@ -112,25 +112,12 @@ class Git::Story::App
     "Getting #{url.inspect} => #{e.class}: #{e}".red
   end
 
-  command doc: '[BRANCH] display docker build status of branch, -n SECONDS refreshes'
-  def docker_status
-    url = nil
-    watch do
-      auth_token = complex_config.story.semaphore_auth_token
-      project    = complex_config.story.semaphore_docker_project
-      url        = "https://semaphoreci.com/api/v1/projects/#{project}/docker/status?auth_token=#{auth_token}"
-      Git::Story::SemaphoreResponse.get(url, debug: @debug)
-    end
-  rescue => e
-    "Getting #{url.inspect} => #{e.class}: #{e}".red
-  end
-
   command doc: '[SERVER] display deploy status of branch, -n SECONDS refreshes'
   def deploy_status(server = complex_config.story.semaphore_default_server)
     url = nil
     watch do
       auth_token = complex_config.story.semaphore_auth_token
-      project    = complex_config.story.semaphore_docker_project
+      project    = complex_config.story.semaphore_test_project
       url        = "https://semaphoreci.com/api/v1/projects/#{project}/servers/#{server}?auth_token=#{auth_token}"
       server   = Git::Story::SemaphoreResponse.get(url, debug: @debug)
       deploys  = server.deploys
@@ -161,8 +148,6 @@ class Git::Story::App
       [
         "Test Status".bold,
         test_status(branch) || 'n/a',
-        "Docker Status".bold,
-        docker_status       || 'n/a',
         "Deploy Status".bold,
         deploy_status       || 'n/a',
       ] * "\n\n"
