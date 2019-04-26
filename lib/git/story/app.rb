@@ -215,7 +215,6 @@ class Git::Story::App
 
   command doc: 'list all production deploy tags'
   def deploy_tags
-    fetch_tags
     capture(tags).lines.map(&:chomp)
   end
 
@@ -237,6 +236,7 @@ class Git::Story::App
 
   command doc: 'output log of changes since last production deploy tag'
   def deploy_log(ref = deploy_tags.last, last_ref = nil, rest: [])
+    fetch_commits
     fetch_tags
     opts = ([
       '--color',
@@ -247,21 +247,21 @@ class Git::Story::App
 
   command doc: '[REF] output diff since last production deploy tag'
   def deploy_diff(ref = nil, rest: [])
-    fetch_tags
+    fetch_commits
     opts = (%w[ --color -u ] | rest) * ' '
     capture("git diff #{opts} #{ref} #{deploy_tags.last}")
   end
 
   command doc: '[REF] output migration diff since last production deploy tag'
   def deploy_migrate_diff(ref = nil, rest: [])
-    fetch_tags
+    fetch_commits
     opts = (%w[ --color -u ] | rest) * ' '
     capture("git diff #{opts} #{deploy_tags.last} #{ref} -- db/migrate")
   end
 
   command doc: '[STORYID] create a story for story STORYID'
   def create(story_id = nil)
-    sh 'git fetch'
+    fetch_commits
     name = provide_name(story_id) or
       error "Cannot provide a new story name for story ##{story_id}: #{@reason.inspect}"
     if old_story = stories.find { |s| s.story_id == @story_id }
@@ -275,7 +275,7 @@ class Git::Story::App
 
   command doc: '[PATTERN] switch to story matching PATTERN'
   def switch(pattern = nil)
-    sh 'git fetch'
+    fetch_commits
     ss = stories.map(&:story_base_name)
     if pattern.present?
       b = apply_pattern(pattern, ss)
@@ -322,6 +322,7 @@ class Git::Story::App
   private
 
   def tags
+    fetch_tags
     if command = complex_config.story.deploy_tag_command?
       command
     else
@@ -407,6 +408,11 @@ class Git::Story::App
   memoize method:
   def fetch_tags
     sh 'git fetch --tags'
+  end
+
+  memoize method:
+  def fetch_commits
+    sh 'git fetch'
   end
 
   def apply_story_accessors(ref)
