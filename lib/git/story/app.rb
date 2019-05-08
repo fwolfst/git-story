@@ -242,6 +242,7 @@ class Git::Story::App
 
   command doc: '[REF] output log of changes since last production deploy tag'
   def deploy_log(ref = default_ref, rest: [])
+    ref = build_ref_range(ref)
     fetch_commits
     fetch_tags
     opts = ([
@@ -253,6 +254,7 @@ class Git::Story::App
 
   command doc: '[REF] List all stories scheduled for next deploy'
   def deploy_stories(ref = default_ref, rest: [])
+    ref = build_ref_range(ref)
     fetch_commits
     fetch_tags
     opts = ([
@@ -267,6 +269,7 @@ class Git::Story::App
 
   command doc: '[REF] output diff since last production deploy tag'
   def deploy_diff(ref = default_ref, rest: [])
+    ref = build_ref_range(ref)
     fetch_commits
     opts = (%w[ --color -u ] | rest) * ' '
     capture("git diff #{opts} #{ref}")
@@ -274,6 +277,7 @@ class Git::Story::App
 
   command doc: '[REF] output migration diff since last production deploy tag'
   def deploy_migrate_diff(ref = default_ref, rest: [])
+    ref = build_ref_range(ref)
     fetch_commits
     opts = (%w[ --color -u ] | rest) * ' '
     capture("git diff #{opts} #{ref} -- db/migrate")
@@ -342,7 +346,15 @@ class Git::Story::App
   private
 
   def default_ref
-    "#{deploy_tags.last}.."
+    deploy_tags.last
+  end
+
+  def build_ref_range(ref)
+    if ref.include?('..')
+      ref
+    else
+      "#{ref}.."
+    end
   end
 
   def tags
