@@ -209,13 +209,14 @@ class Git::Story::App
   end
 
   command doc: '[AUTHOR] list all stories with details'
-  def list_details(author = nil, mark_red: current(check: false))
+  def details(author = nil, mark_red: current(check: false))
     stories.sort_by { |b| -b.story_created_at.to_f }.map { |b|
       next if author && !b.story_author.include?(author)
       name = (bn = b.story_base_name) == mark_red ? bn.red : bn.green
       "#{name} #{b.story_author} #{b.story_created_at.iso8601.yellow}"
     }.compact
   end
+  alias list_details details
 
   command doc: 'list all production deploy tags'
   def deploy_tags
@@ -223,9 +224,10 @@ class Git::Story::App
   end
 
   command doc: 'output the times of all production deploys'
-  def deploy_list
+  def deploys
     deploy_tags.map { |t| format_tag(t) }
   end
+  alias deploy_list deploys
 
   command doc: 'output the last production deploy tag'
   def deploy_tags_last
@@ -238,43 +240,43 @@ class Git::Story::App
     format_tag(tag)
   end
 
-  command doc: 'output log of changes since last production deploy tag'
-  def deploy_log(ref = deploy_tags.last, last_ref = nil, rest: [])
+  command doc: '[REF] output log of changes since last production deploy tag'
+  def deploy_log(ref = default_ref, rest: [])
     fetch_commits
     fetch_tags
     opts = ([
       '--color',
       '--pretty=tformat:"%C(yellow)%h%Creset %C(green)%ci%Creset %s (%Cred%an <%ae>%Creset)"'
     ] | rest) * ' '
-    capture("git log #{opts} #{ref}..#{last_ref}")
+    capture("git log #{opts} #{ref}")
   end
 
-  command doc: 'List all stories scheduled for next deploy'
-  def deploy_stories(ref = deploy_tags.last, last_ref = nil, rest: [])
+  command doc: '[REF] List all stories scheduled for next deploy'
+  def deploy_stories(ref = default_ref, rest: [])
     fetch_commits
     fetch_tags
     opts = ([
       '--color=never',
       '--pretty=%B'
     ] | rest) * ' '
-    output = capture("git log #{opts} #{ref}..#{last_ref}")
+    output = capture("git log #{opts} #{ref}")
     pivotal_ids = SortedSet[]
     output.scan(/\[\s*#\s*(\d+)\s*\]/) { pivotal_ids << $1.to_i }
     pivotal_ids.map { |pid| status(pid) } * (?┄ * Tins::Terminal.cols << ?\n)
   end
 
   command doc: '[REF] output diff since last production deploy tag'
-  def deploy_diff(ref = nil, rest: [])
+  def deploy_diff(ref = default_ref, rest: [])
     fetch_commits
     opts = (%w[ --color -u ] | rest) * ' '
-    capture("git diff #{opts} #{ref} #{deploy_tags.last}")
+    capture("git diff #{opts} #{ref}")
   end
 
   command doc: '[REF] output migration diff since last production deploy tag'
-  def deploy_migrate_diff(ref = nil, rest: [])
+  def deploy_migrate_diff(ref = default_ref, rest: [])
     fetch_commits
     opts = (%w[ --color -u ] | rest) * ' '
-    capture("git diff #{opts} #{deploy_tags.last} #{ref} -- db/migrate")
+    capture("git diff #{opts} #{ref} -- db/migrate")
   end
 
   command doc: '[STORYID] create a story for story STORYID'
@@ -338,6 +340,10 @@ class Git::Story::App
   end
 
   private
+
+  def default_ref
+    "#{deploy_tags.last}.."
+  end
 
   def tags
     fetch_tags
