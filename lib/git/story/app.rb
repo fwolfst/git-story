@@ -1,6 +1,7 @@
 require 'time'
 require 'open-uri'
 require 'tins/go'
+require 'set'
 
 class Git::Story::App
   class ::String
@@ -168,7 +169,7 @@ class Git::Story::App
           cs.green
         else
           cs.yellow
-        end
+        end.italic
       color_type =
         case t = story.story_type
         when 'bug'
@@ -180,7 +181,7 @@ class Git::Story::App
         else
           t
         end
-      <<~end
+      result = <<~end
         Id: #{(?# + story.id.to_s).green}
         Name: #{story.name.inspect.bold}
         Type: #{color_type}
@@ -189,8 +190,11 @@ class Git::Story::App
         Branch: #{current_branch_checked?&.color('#ff5f00')}
         Labels: #{story.labels.map(&:name).join(' ').on_color(91)}
         Pivotal: #{story.url}
-        Github: #{github_url(current_branch_checked?)}
       end
+      if url = github_url(current_branch_checked?)
+        result << "Github: #{url}\n"
+      end
+      result
     end
   rescue => e
     "Getting pivotal story status => #{e.class}: #{e}".red
@@ -243,6 +247,20 @@ class Git::Story::App
       '--pretty=tformat:"%C(yellow)%h%Creset %C(green)%ci%Creset %s (%Cred%an <%ae>%Creset)"'
     ] | rest) * ' '
     capture("git log #{opts} #{ref}..#{last_ref}")
+  end
+
+  command doc: 'List all stories scheduled for next deploy'
+  def deploy_stories(ref = deploy_tags.last, last_ref = nil, rest: [])
+    fetch_commits
+    fetch_tags
+    opts = ([
+      '--color=never',
+      '--pretty=%B'
+    ] | rest) * ' '
+    output = capture("git log #{opts} #{ref}..#{last_ref}")
+    pivotal_ids = SortedSet[]
+    output.scan(/\[\s*#\s*(\d+)\s*\]/) { pivotal_ids << $1.to_i }
+    pivotal_ids.map { |pid| status(pid) } * (?┄ * Tins::Terminal.cols << ?\n)
   end
 
   command doc: '[REF] output diff since last production deploy tag'
