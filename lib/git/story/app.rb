@@ -2,6 +2,7 @@ require 'time'
 require 'open-uri'
 require 'tins/go'
 require 'set'
+require 'infobar'
 
 class Git::Story::App
   class ::String
@@ -264,7 +265,19 @@ class Git::Story::App
     output = capture("git log #{opts} #{ref}")
     pivotal_ids = SortedSet[]
     output.scan(/\[\s*#\s*(\d+)\s*\]/) { pivotal_ids << $1.to_i }
-    pivotal_ids.map { |pid| status(pid) } * (?┄ * Tins::Terminal.cols << ?\n)
+    fetch_statuses(pivotal_ids) * (?┄ * Tins::Terminal.cols << ?\n)
+  end
+
+  def fetch_statuses(pivotal_ids)
+    tg = ThreadGroup.new
+    pivotal_ids.each do |pid|
+      tg.add Thread.new { Thread.current[:status] = status(pid) }
+    end
+    tg.list.with_infobar(label: 'Story').map do |t|
+      +infobar
+      t.join
+      t[:status]
+    end
   end
 
   command doc: '[REF] output diff since last production deploy tag'
