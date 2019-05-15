@@ -182,18 +182,20 @@ class Git::Story::App
         else
           t
         end
+      owners = fetch_story_owners(story_id).map { |o| "#{o.name} <#{o.email}>" }
       result = <<~end
         Id: #{(?# + story.id.to_s).green}
         Name: #{story.name.inspect.bold}
         Type: #{color_type}
-        Estimate: #{story.estimate.to_s.yellow.bold}
+        Estimate: #{story.estimate.to_s.full? { |e| e.yellow.bold } || 'n/a'}
         State: #{color_state}
         Branch: #{current_branch_checked?&.color('#ff5f00')}
         Labels: #{story.labels.map(&:name).join(' ').on_color(91)}
-        Pivotal: #{story.url}
+        Owners: #{owners.join(', ').yellow}
+        Pivotal: #{story.url.color(33)}
       end
       if url = github_url(current_branch_checked?)
-        result << "Github: #{url}\n"
+        result << "Github: #{url.color(33)}\n"
       end
       result
     end
@@ -436,6 +438,10 @@ class Git::Story::App
 
   def fetch_story(story_id)
     pivotal_get("projects/#{pivotal_project}/stories/#{story_id}").full?
+  end
+
+  def fetch_story_owners(story_id)
+    pivotal_get("projects/#{pivotal_project}/stories/#{story_id}/owners").full?
   end
 
   def pivotal_get(path)
