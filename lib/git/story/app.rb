@@ -365,8 +365,16 @@ class Git::Story::App
   end
 
   def build_ref_range(ref)
-    if ref.include?('..')
-      ref
+    if /^(?<before>.+?)?\.\.(?<after>.+)?\z/ =~ ref
+      if before && after
+        "#{before}..#{after}"
+      elsif !before
+        "#{default_ref}..#{after}"
+      elsif !after
+        "#{before}.."
+      else
+        "#{default_ref}.."
+      end
     else
       "#{ref}.."
     end
