@@ -365,7 +365,9 @@ class Git::Story::App
   end
 
   def build_ref_range(ref)
-    if /^(?<before>.+?)?\.\.(?<after>.+)?\z/ =~ ref
+    if 'previous' == ref and (previous = deploy_tags.last(2)).size == 2
+      previous * '..'
+    elsif /^(?<before>.+?)?\.\.(?<after>.+)?\z/ =~ ref
       if before && after
         "#{before}..#{after}"
       elsif !before
