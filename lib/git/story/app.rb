@@ -200,7 +200,7 @@ class Git::Story::App
       result
     end
   rescue => e
-    "Getting pivotal story status => #{e.class}: #{e}".red
+    "Getting pivotal story status => #{e.class}: #{e}\n#{e.backtrace.join(?n)}".red
   end
 
   command doc: '[AUTHOR] list all stories'
@@ -451,7 +451,7 @@ class Git::Story::App
   end
 
   def fetch_story_owners(story_id)
-    pivotal_get("projects/#{pivotal_project}/stories/#{story_id}/owners").full?
+    pivotal_get("projects/#{pivotal_project}/stories/#{story_id}/owners")
   end
 
   def pivotal_get(path)
