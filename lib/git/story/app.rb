@@ -182,7 +182,7 @@ class Git::Story::App
         else
           t
         end
-      owners = fetch_story_owners(story_id).map { |o| "#{o.name} <#{o.email}>" }
+      owners = Array(fetch_story_owners(story_id)).map { |o| "#{o.name} <#{o.email}>" }
       result = <<~end
         Id: #{(?# + story.id.to_s).green}
         Name: #{story.name.inspect.bold}
