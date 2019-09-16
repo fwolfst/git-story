@@ -167,9 +167,9 @@ class Git::Story::App
         when 'rejected'
           cs.white.on_red
         when 'accepted'
-          cs.green
+          cs.black.on_green
         else
-          cs.yellow
+          cs.black.on_yellow
         end.italic
       color_type =
         case t = story.story_type
@@ -190,7 +190,7 @@ class Git::Story::App
         Estimate: #{story.estimate.to_s.full? { |e| e.yellow.bold } || 'n/a'}
         State: #{color_state}
         Branch: #{current_branch_checked?&.color('#ff5f00')}
-        Labels: #{story.labels.map(&:name).join(' ').on_color(91)}
+        Labels: #{story.labels.map { |l| l.name.on_color(91) }.join(' ')}
         Owners: #{owners.join(', ').yellow}
         Pivotal: #{story.url.color(33)}
       end
