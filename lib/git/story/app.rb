@@ -519,6 +519,8 @@ class Git::Story::App
 
   def tag_time(tag)
     case tag
+    when %r(\d{4}/\d{2}/\d{2}\d{2}:\d{2})
+      Time.strptime($&, '%Y/%m/%d%H:%M')
     when /\d{4}_\d{2}_\d{2}-\d{2}_\d{2}/
       Time.strptime($&, '%Y_%m_%d-%H_%M')
     end
