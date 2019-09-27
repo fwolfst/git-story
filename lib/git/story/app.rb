@@ -223,24 +223,23 @@ class Git::Story::App
 
   command doc: 'list all production deploy tags'
   def deploy_tags
-    capture(tags).lines.map(&:chomp)
+    tags.map { |t| tag_name(t) }
   end
 
   command doc: 'output the times of all production deploys'
   def deploys
-    deploy_tags.map { |t| format_tag(t) }
+    tags.map { |t| format_tag(t) }
   end
   alias deploy_list deploys
 
   command doc: 'output the last production deploy tag'
   def deploy_tags_last
-    deploy_tags.last
+    tag_name(tags.last)
   end
 
   command doc: 'output the time of the last production deploy'
   def deploy_last
-    tag = deploy_tags_last
-    format_tag(tag)
+    format_tag(tags.last)
   end
 
   command doc: '[REF] output log of changes since last production deploy tag'
@@ -361,12 +360,13 @@ class Git::Story::App
   private
 
   def default_ref
-    deploy_tags.last
+    tags.last
   end
 
   def build_ref_range(ref)
-    if 'previous' == ref and (previous = deploy_tags.last(2)).size == 2
-      previous * '..'
+    ref = tag_name(ref)
+    if 'previous' == ref and (previous = tags.last(2)).size == 2
+      previous.map { |t| tag_name(t) } * '..'
     elsif /^(?<before>.+?)?\.\.(?<after>.+)?\z/ =~ ref
       if before && after
         "#{before}..#{after}"
@@ -383,6 +383,10 @@ class Git::Story::App
   end
 
   def tags
+    capture(deploy_tag_command).lines.map(&:chomp)
+  end
+
+  def deploy_tag_command
     fetch_tags
     if command = complex_config.story.deploy_tag_command?
       command
@@ -519,24 +523,31 @@ class Git::Story::App
 
   def tag_time(tag)
     case tag
-    when %r(\d{4}/\d{2}/\d{2}\d{2}:\d{2})
-      Time.strptime($&, '%Y/%m/%d%H:%M')
-    when /\d{4}_\d{2}_\d{2}-\d{2}_\d{2}/
-      Time.strptime($&, '%Y_%m_%d-%H_%M')
+    when %r(\A\d{4}/\d{2}/\d{2}\d{2}:\d{2}:\d{2} (\S+))
+      return Time.strptime($&, '%Y/%m/%d%H:%M'), $1
+    when /\d{4}_\d{2}_\d{2}-\d{2}_\d{2}\z/
+      return Time.strptime($&, '%Y_%m_%d-%H_%M'), tag
+    else
+      return nil, tag
     end
   end
 
+  def tag_name(tag)
+    tag_time(tag)&.last
+  end
+
   def format_tag(tag)
-    if time = tag_time(tag)
+    time, tag_name = tag_time(tag)
+    if time
       day  = Time::RFC2822_DAY_NAME[time.wday]
       "%s %s %s %s" % [
         time.iso8601.green,
         day.green,
-        tag.to_s.yellow,
+        tag_name.to_s.yellow,
         "was #{Tins::Duration.new((Time.now - time).floor)} ago".green,
       ]
     else
-      tag
+      tag_name
     end
   end
 
