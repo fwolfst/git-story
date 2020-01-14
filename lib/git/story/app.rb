@@ -462,7 +462,7 @@ class Git::Story::App
     path = path.sub(/\A\/*/, '')
     url = "https://www.pivotaltracker.com/services/v5/#{path}"
     @debug and STDERR.puts "Fetching #{url.inspect}"
-    open(url,
+    URI.open(url,
          'X-TrackerToken' => pivotal_token,
          'Content-Type'   => 'application/xml',
     ) do |io|
