@@ -5,7 +5,7 @@ require 'infobar'
 
 class Git::Story::SemaphoreResponse < JSON::GenericObject
   def self.get(url, debug: false)
-    data = open(url).read
+    data = URI.open(url).read
     debug and STDERR.puts JSON.pretty_generate(JSON(data))
     result = JSON(data, object_class: self)
     result.debug = debug
