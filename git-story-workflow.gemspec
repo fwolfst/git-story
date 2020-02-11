@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
-# stub: git-story-workflow 0.9.12 ruby lib
+# stub: git-story-workflow 0.10.0 ruby lib
 
 Gem::Specification.new do |s|
   s.name = "git-story-workflow".freeze
-  s.version = "0.9.12"
+  s.version = "0.10.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Florian Frank".freeze]
-  s.date = "2020-01-15"
+  s.date = "2020-02-11"
   s.description = "Gem abstracting a git workflow\u2026".freeze
   s.email = "flori@ping.de".freeze
   s.executables = ["git-story".freeze]
@@ -35,6 +35,7 @@ Gem::Specification.new do |s|
     s.add_runtime_dependency(%q<mize>.freeze, [">= 0"])
     s.add_runtime_dependency(%q<term-ansicolor>.freeze, [">= 0"])
     s.add_runtime_dependency(%q<complex_config>.freeze, [">= 0"])
+    s.add_runtime_dependency(%q<search_ui>.freeze, [">= 0"])
   else
     s.add_dependency(%q<gem_hadar>.freeze, ["~> 1.11.0"])
     s.add_dependency(%q<rake>.freeze, [">= 0"])
@@ -45,5 +46,6 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<mize>.freeze, [">= 0"])
     s.add_dependency(%q<term-ansicolor>.freeze, [">= 0"])
     s.add_dependency(%q<complex_config>.freeze, [">= 0"])
+    s.add_dependency(%q<search_ui>.freeze, [">= 0"])
   end
 end

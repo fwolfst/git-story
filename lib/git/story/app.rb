@@ -3,6 +3,8 @@ require 'open-uri'
 require 'tins/go'
 require 'set'
 require 'infobar'
+require 'search_ui'
+require 'amatch'
 
 class Git::Story::App
   class ::String
@@ -13,6 +15,7 @@ class Git::Story::App
   extend Git::Story::Utils
   include ComplexConfig::Provider::Shortcuts
   include Tins::GO
+  include SearchUI
 
   annotate :command
 
@@ -315,29 +318,31 @@ class Git::Story::App
   def switch(pattern = nil)
     fetch_commits
     ss = stories.map(&:story_base_name)
-    if pattern.present?
-      b = apply_pattern(pattern, ss)
-      if b.size == 1
-        b = b.first
-      else
-        b = nil
-      end
+    branch = Search.new(
+      match: -> answer {
+        answer = answer.strip.delete(?#).downcase
+
+        matcher = Amatch::PairDistance.new(answer)
+        matches = ss.map { |n| [ n, -matcher.similar(n.downcase) ] }.
+          select { |_, s| s < 0 }.sort_by(&:last).map(&:first)
+
+        matches.empty? and matches = ss
+        matches.first(Tins::Terminal.lines - 1)
+      },
+      query: -> _answer, matches, selector {
+        matches.each_with_index.
+          map { |m, i| i == selector ? '⏻ ' + Search.on_blue(m) : '┊ ' + m } * ?\n
+      },
+      found: -> _answer, matches, selector {
+        matches[selector]
+      },
+      prompt: 'Story? %s'.bold,
+      output: STDOUT
+    ).start
+    if branch
+      sh "git checkout #{branch}"
+      return "Switched to story: #{branch}".green
     end
-    loop do
-      unless b
-        b = complete prompt: 'Story <TAB>? '.bright_blue do |pattern|
-          apply_pattern(pattern, ss)
-        end&.strip
-        b.empty? and return
-      end
-      if branch = ss.find { |f| f == b }
-        sh "git checkout #{branch}"
-        return "Switched to story: #{branch}".green
-      else
-        b = nil
-      end
-    end
-  rescue Interrupt
   end
 
   command doc: '[BRANCH] open branch on github'

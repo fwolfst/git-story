@@ -22,6 +22,7 @@ GemHadar do
   dependency 'mize'
   dependency 'term-ansicolor'
   dependency 'complex_config'
+  dependency 'search_ui'
 
   development_dependency 'rake'
   development_dependency 'simplecov'
