@@ -317,31 +317,22 @@ class Git::Story::App
   command doc: '[PATTERN] switch to story matching PATTERN'
   def switch(pattern = nil)
     fetch_commits
-    ss = stories.map(&:story_base_name)
-    branch = Search.new(
-      match: -> answer {
-        answer = answer.strip.delete(?#).downcase
-
-        matcher = Amatch::PairDistance.new(answer)
-        matches = ss.map { |n| [ n, -matcher.similar(n.downcase) ] }.
-          select { |_, s| s < 0 }.sort_by(&:last).map(&:first)
-
-        matches.empty? and matches = ss
-        matches.first(Tins::Terminal.lines - 1)
-      },
-      query: -> _answer, matches, selector {
-        matches.each_with_index.
-          map { |m, i| i == selector ? '⏻ ' + Search.on_blue(m) : '┊ ' + m } * ?\n
-      },
-      found: -> _answer, matches, selector {
-        matches[selector]
-      },
-      prompt: 'Story? %s'.bold,
-      output: STDOUT
-    ).start
-    if branch
+    if branch = pick_branch(prompt: 'Switch to story? %s')
       sh "git checkout #{branch}"
       return "Switched to story: #{branch}".green
+    end
+  end
+
+  command doc: '[PATTERN] delete story branch matching PATTERN'
+  def delete(pattern = nil)
+    fetch_commits
+    if branch = pick_branch(prompt: 'Delete story branch? %s', symbol: ?⌦)
+      sh "git pull origin #{branch}"
+      sh "git branch -d #{branch}"
+      if ask(prompt: 'Delete remote branch? (y/N) ') =~ /\Ay\z/i
+        sh "git push origin #{branch} --delete"
+      end
+      return "Deleted story branch: #{branch}".green
     end
   end
 
@@ -363,6 +354,31 @@ class Git::Story::App
   end
 
   private
+
+  def pick_branch(prompt:, symbol: ?⏻)
+    ss = stories.map(&:story_base_name)
+    branch = Search.new(
+      match: -> answer {
+        answer = answer.strip.delete(?#).downcase
+
+        matcher = Amatch::PairDistance.new(answer)
+        matches = ss.map { |n| [ n, -matcher.similar(n.downcase) ] }.
+          select { |_, s| s < 0 }.sort_by(&:last).map(&:first)
+
+        matches.empty? and matches = ss
+        matches.first(Tins::Terminal.lines - 1)
+      },
+      query: -> _answer, matches, selector {
+        matches.each_with_index.
+          map { |m, i| i == selector ? "#{symbol} " + Search.on_blue(m) : '┊ ' + m } * ?\n
+      },
+      found: -> _answer, matches, selector {
+        matches[selector]
+      },
+      prompt: prompt.bold,
+      output: STDOUT
+    ).start
+  end
 
   def default_ref
     tags.last
