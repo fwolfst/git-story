@@ -37,7 +37,12 @@ class Git::Story::App
     @rest_argv = (sep = argv.index('--')) ? argv.slice!(sep..-1).tap(&:shift) : []
     @argv      = argv
     @opts    = go 'n:', @argv
-    @command = @argv.shift&.to_sym
+    if @argv.empty?
+      @command = nil
+    else
+      @command = (@argv * ?_).to_sym
+      @argv.clear
+    end
     @debug   = debug
   end
 
@@ -50,8 +55,11 @@ class Git::Story::App
         puts __send__(@command, *@argv)
       end
     else
-      @command and @command = @command.inspect
-      @command ||= 'n/a'
+      if @command
+        @command = @command.inspect
+      else
+        @command = 'n/a'
+      end
       STDERR.puts "Unknown command #{@command}\n\n#{help.join(?\n)}"
       exit 1
     end
@@ -64,7 +72,7 @@ class Git::Story::App
     longest = command_annotations.keys.map(&:size).max
     result.concat(
       command_annotations.map { |name, a|
-        "#{name.to_s.ljust(longest)} #{a[:doc]}"
+        "#{name.to_s.gsub(?_, ' ').ljust(longest)} #{a[:doc]}"
       }
     )
   end
