@@ -36,14 +36,14 @@ class Git::Story::App
   def initialize(argv = ARGV.dup, debug: ENV['DEBUG'].to_i == 1)
     @rest_argv = (sep = argv.index('--')) ? argv.slice!(sep..-1).tap(&:shift) : []
     @argv      = argv
-    @opts    = go 'n:', @argv
-    if @argv.empty?
-      @command = nil
-    else
-      @command = (@argv * ?_).to_sym
-      @argv.clear
+    @opts      = go 'n:', @argv
+    @debug     = debug
+    c, @command = [], nil
+    until @argv.empty?
+      c << @argv.shift
+      @command = c.join(?_).to_sym
+      break if command_of(@command)
     end
-    @debug   = debug
   end
 
   def run
