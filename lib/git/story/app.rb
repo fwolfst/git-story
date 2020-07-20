@@ -38,12 +38,7 @@ class Git::Story::App
     @argv      = argv
     @opts      = go 'n:', @argv
     @debug     = debug
-    c, @command = [], nil
-    until @argv.empty?
-      c << @argv.shift
-      @command = c.join(?_).to_sym
-      break if command_of(@command)
-    end
+    determine_command
   end
 
   def run
@@ -362,6 +357,23 @@ class Git::Story::App
   end
 
   private
+
+  def determine_command
+    c, command = [], nil
+    possible_commands = []
+    until @argv.empty?
+      c << @argv.shift
+      command = c.join(?_).to_sym
+      if command_of(command)
+        possible_commands << [ command, @argv.dup ]
+      end
+    end
+    unless possible_commands.empty?
+      @command, argv = possible_commands.last
+      @argv.replace(argv)
+    end
+    self
+  end
 
   def pick_branch(prompt:, symbol: ?⏻)
     ss = stories.map(&:story_base_name)
