@@ -107,62 +107,6 @@ class Git::Story::App
     end
   end
 
-  command doc: '[BRANCH] display test status of branch, -n SECONDS refreshes'
-  def test_status(branch = current(check: false))
-    url = nil
-    watch do
-      auth_token = complex_config.story.semaphore_auth_token
-      project    = complex_config.story.semaphore_test_project
-      url        = "https://semaphoreci.com/api/v1/projects/#{project}/#{branch}/status?auth_token=#{auth_token}"
-      Git::Story::SemaphoreResponse.get(url, debug: @debug)
-    end
-  rescue => e
-    "Getting #{url.inspect} => #{e.class}: #{e}".red
-  end
-
-  command doc: '[SERVER] display deploy status of branch, -n SECONDS refreshes'
-  def deploy_status(server = complex_config.story.semaphore_default_server)
-    url = nil
-    watch do
-      auth_token = complex_config.story.semaphore_auth_token
-      project    = complex_config.story.semaphore_test_project
-      url        = "https://semaphoreci.com/api/v1/projects/#{project}/servers/#{server}?auth_token=#{auth_token}"
-      server   = Git::Story::SemaphoreResponse.get(url, debug: @debug)
-      deploys  = server.deploys
-      upcoming = deploys.select(&:pending?)&.last
-      passed = deploys.select(&:passed?)
-      current  = passed.first
-      if !passed.empty? && upcoming
-        upcoming.estimated_duration = passed.sum { |d| d.duration.to_f } / passed.size
-      end
-      <<~end
-        Server: #{server.server_name&.green}
-        Branch: #{server.branch_name&.color('#ff5f00')}
-        Semaphore: #{server.server_url}
-        Strategy: #{server.strategy}
-        Upcoming:
-        #{upcoming}
-        Current:
-        #{current}
-      end
-    end
-  rescue => e
-    "Getting #{url.inspect} => #{e.class}: #{e}".red
-  end
-
-  command doc: '[BRANCH] display build status for branch, -n SECONDS refreshes'
-  def build_status(branch = current(check: false))
-    watch do
-      [
-        "Test Status".bold,
-        test_status(branch) || 'n/a',
-        "Deploy Status".bold,
-        deploy_status       || 'n/a',
-      ] * "\n\n"
-    end
-  end
-
-
   command doc: '[STORY_ID] fetch status of current story, -n SECONDS refreshes'
   def status(story_id = current(check: true)&.[](/_(\d+)\z/, 1)&.to_i)
     if story = fetch_story(story_id)
