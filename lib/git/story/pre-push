@@ -1,0 +1,35 @@
+#!/bin/sh
+# Installed by the git-story gem
+
+remote="$1"
+url="$2"
+
+z40=0000000000000000000000000000000000000000
+
+while read local_ref local_sha remote_ref remote_sha
+do
+	if [ "$local_sha" = $z40 ]
+	then
+		# Handle delete
+		:
+	else
+		if [ "$remote_sha" = $z40 ]
+		then
+			# New branch, examine all commits
+			range="$local_sha"
+		else
+			# Update to existing branch, examine new commits
+			range="$remote_sha..$local_sha"
+		fi
+
+		# Check for WIP or [TODO] commit
+		commit=`git rev-list -n 1 --pretty=%B "$range" | egrep -i 'WIP|\[TODO\]'`
+		if [ -n "$commit" -a "$FORCE" != "1" ]
+		then
+			echo >&2 "Found WIP / [TODO] commit in $local_ref, not pushing"
+			exit 1
+		fi
+	fi
+done
+
+exit 0

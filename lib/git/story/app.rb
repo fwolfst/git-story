@@ -39,10 +39,10 @@ class Git::Story::App
     @opts      = go 'n:', @argv
     @debug     = debug
     determine_command
+    Git::Story::Setup.perform
   end
 
   def run
-    Git::Story::Setup.perform
     if command_of(@command)
       if method(@command).parameters.include?(%i[key rest])
         puts __send__(@command, *@argv, rest: @rest_argv)

@@ -11,30 +11,38 @@ module Git::Story::Setup
   module_function
 
   def perform(force: false)
-    pcm = PREPARE_COMMIT_MESSAGE_DST
-    if File.exist?(pcm)
-      if force
-        install_prepare_commit_msg
-      elsif File.read(pcm).match?(MARKER)
-        ;
-      else
-        ask(
-          prompt: "File #{pcm.inspect} not created by git-story."\
-            " Overwrite? (y/n, default is %s)",
-          default: ?n,
-        ) do |response|
-          if response == ?y
-            install_prepare_commit_msg
+    for filename in %w[ prepare-commit-msg pre-push ]
+      if path = file_installed?(filename)
+        if force
+          install_file filename
+        elsif File.read(path).match?(MARKER)
+          ;
+        else
+          ask(
+            prompt: "File #{path.inspect} not created by git-story."\
+              " Overwrite? (y/n, default is %s) ",
+            default: ?n,
+          ) do |response|
+            if response == ?y
+              install_file filename
+            end
           end
         end
+      else
+        install_file filename
       end
-    else
-      install_prepare_commit_msg
     end
   end
 
-  def install_prepare_commit_msg
+  def file_installed?(filename)
+    path = File.join(HOOKS_DIR, filename)
+    if File.exist?(path)
+      path
+    end
+  end
+
+  def install_file(filename)
     File.exist?(HOOKS_DIR) or mkdir_p(HOOKS_DIR)
-    cp PREPARE_COMMIT_MESSAGE_SRC, PREPARE_COMMIT_MESSAGE_DST
+    cp File.join(__dir__, filename), File.join(HOOKS_DIR, filename)
   end
 end
