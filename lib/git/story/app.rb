@@ -300,6 +300,12 @@ class Git::Story::App
     nil
   end
 
+  command doc: 'open project on semaphore'
+  def semaphore
+    system "open #{complex_config.story.semaphore_project_url}"
+    nil
+  end
+
   private
 
   def determine_command
