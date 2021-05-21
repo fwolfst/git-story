@@ -286,7 +286,7 @@ class Git::Story::App
   command doc: '[BRANCH] open branch on github'
   def github(branch = current(check: false))
     if url = github_url(branch)
-      system "open #{url.inspect}"
+      sh "open #{url.inspect}"
     end
     nil
   end
@@ -295,14 +295,28 @@ class Git::Story::App
   def pivotal(branch = current(check: true))
     if story_id = branch&.[](/_(\d+)\z/, 1)&.to_i
       story_url = fetch_story(story_id)&.url
-      system "open #{story_url}"
+      sh "open #{story_url}"
     end
     nil
   end
 
   command doc: 'open project on semaphore'
   def semaphore
-    system "open #{complex_config.story.semaphore_project_url}"
+    sh "open #{complex_config.story.semaphore_project_url}"
+    nil
+  end
+
+  command doc: '[REF] create a hotfix branch from REF'
+  def hotfix(ref = nil)
+    if ref
+      start_point = ref
+    elsif tag = tags.last
+      start_point = tag_name(tag)
+    else
+      fail 'no last deployment tag found'
+    end
+    branch = "hotfix_#{start_point}"
+    sh "git checkout -b #{branch.inspect} #{start_point.inspect}"
     nil
   end
 
@@ -394,7 +408,7 @@ class Git::Story::App
       end
       loop do
         r = block.()
-        system('clear')
+        sh 'clear'
         start = Time.now
         puts r
         refresh_at = start + seconds

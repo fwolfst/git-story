@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
-# stub: git-story-workflow 1.2.0 ruby lib
+# stub: git-story-workflow 1.3.0 ruby lib
 
 Gem::Specification.new do |s|
   s.name = "git-story-workflow".freeze
-  s.version = "1.2.0"
+  s.version = "1.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Florian Frank".freeze]
-  s.date = "2021-05-04"
+  s.date = "2021-05-21"
   s.description = "Gem abstracting a git workflow\u2026".freeze
   s.email = "flori@ping.de".freeze
   s.executables = ["git-story".freeze]
