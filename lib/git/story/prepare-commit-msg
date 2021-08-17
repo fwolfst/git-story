@@ -67,7 +67,7 @@ Tempfile.open('commit') do |output|
     message_parsed = CommitMesssageParser.new.parse(template)
     if message_parsed.story_number_found?
       output.puts message_parsed.total
-    elsif complex_config.todo_nudging? && story_numbers.empty? && !message_parsed.story_number_done?
+    elsif complex_config.story.todo_nudging? && story_numbers.empty? && !message_parsed.story_number_done?
       output.puts message_parsed.data, "", "[TODO]", "", message_parsed.footer
     else
       full_message = [  message_parsed.data, "", ]
