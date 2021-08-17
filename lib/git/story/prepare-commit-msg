@@ -2,11 +2,14 @@
 # Installed by the git-story gem
 
 require 'tempfile'
+require 'complex_config/rude'
+include ComplexConfig::Provider::Shortcuts
 
 class CommitMesssageParser
   def initialize
     @line_index         = 0
     @story_number_found = false
+    @story_number_done  = false
     @message_data       = []
   end
 
@@ -16,10 +19,20 @@ class CommitMesssageParser
     @story_number_found
   end
 
+  def story_number_done?
+    @story_number_done
+  end
+
   def parse(template)
     @message_data = template.readlines
     @message_data.each do |line|
-      line =~ /\[.*#\d+.*\]/ and @story_number_found = true
+      if /^\s*\[.*(?:#\d+|TODO|(?<done>DONE)).*\]/i =~ line
+        @story_number_found = true
+        if @story_number_done  = !!done
+          @message_data.slice!(@line_index)
+          next
+        end
+      end
       if line =~ /^\s*#/
         break
       else
@@ -49,21 +62,31 @@ story_numbers =
     break $1.split(/_/)
   } || []
 story_numbers.map!(&:chomp)
-unless story_numbers.empty?
-  Tempfile.open('commit') do |output|
-    File.open(ARGV.first) do |template|
-      message_parsed = CommitMesssageParser.new.parse(template)
-      if message_parsed.story_number_found?
-        output.puts message_parsed.total
-      else
-        output.puts message_parsed.data, "",
-          "[#{story_numbers.map { |story_number| "##{story_number}" } * ' '}]",
-          "", message_parsed.footer
+Tempfile.open('commit') do |output|
+  File.open(ARGV.first) do |template|
+    message_parsed = CommitMesssageParser.new.parse(template)
+    if message_parsed.story_number_found?
+      output.puts message_parsed.total
+    elsif complex_config.todo_nudging? && story_numbers.empty? && !message_parsed.story_number_done?
+      output.puts message_parsed.data, "", "[TODO]", "", message_parsed.footer
+    else
+      full_message = [  message_parsed.data, "", ]
+      if prefix = complex_config.story.pivotal_reference_prefix?
+        pivotal_reference = -> number { "%s-%u" % [ prefix, number ] }
+        full_message.concat(
+          story_numbers.each_with_index.map { |story_number, i| "#{i + 1}. " + pivotal_reference.(story_number) }
+        )
+        full_message << ""
       end
-      output.rewind
-      File.open(ARGV.first, 'w') do |message|
-        message.write output.read
-      end
+      full_message <<
+        "[#{story_numbers.map { |story_number| "##{story_number}" } * ' '}]" <<
+        "" <<
+        message_parsed.footer
+      output.puts full_message
+    end
+    output.rewind
+    File.open(ARGV.first, 'w') do |message|
+      message.write output.read
     end
   end
 end
