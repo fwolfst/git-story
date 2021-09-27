@@ -466,7 +466,12 @@ class Git::Story::App
   def pivotal_get(path)
     path = path.sub(/\A\/*/, '')
     url = "https://www.pivotaltracker.com/services/v5/#{path}"
-    @debug and STDERR.puts "Fetching #{url.inspect}"
+    if pivotal_token
+      @debug and STDERR.puts "Fetching #{url.inspect}"
+    else
+      STDERR.puts "Cannot fetch #{url.inspect} without PIVOTAL_TOKEN set as env var"
+      return
+    end
     URI.open(url,
          'X-TrackerToken' => pivotal_token,
          'Content-Type'   => 'application/xml',
