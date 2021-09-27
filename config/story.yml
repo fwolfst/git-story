@@ -2,3 +2,4 @@
 pivotal_token: <%= ENV['PIVOTAL_TOKEN'] %>
 pivotal_project: 123456789
 deploy_tag_prefix: production_deploy_
+semaphore_project_url: https://xxx.semaphoreci.com/projects/yyy
