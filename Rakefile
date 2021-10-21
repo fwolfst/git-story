@@ -27,6 +27,7 @@ GemHadar do
   development_dependency 'rake'
   development_dependency 'simplecov'
   development_dependency 'rspec'
+  development_dependency 'byebug'
   licenses << 'Apache-2.0'
 end
 

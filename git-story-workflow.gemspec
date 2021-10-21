@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
-# stub: git-story-workflow 1.4.2 ruby lib
+# stub: git-story-workflow 1.5.0 ruby lib
 
 Gem::Specification.new do |s|
   s.name = "git-story-workflow".freeze
-  s.version = "1.4.2"
+  s.version = "1.5.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Florian Frank".freeze]
-  s.date = "2021-09-27"
+  s.date = "2021-10-21"
   s.description = "Gem abstracting a git workflow\u2026".freeze
   s.email = "flori@ping.de".freeze
   s.executables = ["git-story".freeze]
@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
     s.add_development_dependency(%q<rake>.freeze, [">= 0"])
     s.add_development_dependency(%q<simplecov>.freeze, [">= 0"])
     s.add_development_dependency(%q<rspec>.freeze, [">= 0"])
+    s.add_development_dependency(%q<byebug>.freeze, [">= 0"])
     s.add_runtime_dependency(%q<infobar>.freeze, [">= 0"])
     s.add_runtime_dependency(%q<tins>.freeze, [">= 0"])
     s.add_runtime_dependency(%q<mize>.freeze, [">= 0"])
@@ -41,6 +42,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rake>.freeze, [">= 0"])
     s.add_dependency(%q<simplecov>.freeze, [">= 0"])
     s.add_dependency(%q<rspec>.freeze, [">= 0"])
+    s.add_dependency(%q<byebug>.freeze, [">= 0"])
     s.add_dependency(%q<infobar>.freeze, [">= 0"])
     s.add_dependency(%q<tins>.freeze, [">= 0"])
     s.add_dependency(%q<mize>.freeze, [">= 0"])

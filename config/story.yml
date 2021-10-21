@@ -1,5 +1,8 @@
 ---
-pivotal_token: <%= ENV['PIVOTAL_TOKEN'] %>
+pivotal_token:   <%= ENV['PIVOTAL_TOKEN'] %>
 pivotal_project: 123456789
+pivotal_reference_prefix: pivotal
 deploy_tag_prefix: production_deploy_
-semaphore_project_url: https://xxx.semaphoreci.com/projects/yyy
+semaphore_auth_token: <%= ENV['SEMAPHORE_AUTH_TOKEN'] %>
+semaphore_project_url: https://betterplace.semaphoreci.com/projects/betterplace
+todo_nudging: <%= ENV['TODO_NUDGING'].to_i == 1 %>

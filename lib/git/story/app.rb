@@ -39,7 +39,13 @@ class Git::Story::App
     @opts      = go 'n:', @argv
     @debug     = debug
     determine_command
-    Git::Story::Setup.perform
+    if !cc.story? && @command != :setup
+      warn "git story configuration file " +
+        "config/story.yml".bold + " is missing.\n\nCall " +
+        "git story setup".bold + " to create an initial one, inspect and " +
+        "edit it yourself, and also set the appropriate env vars.\n\n"
+      @command, @argv = :help, []
+    end
   end
 
   def run
@@ -70,6 +76,15 @@ class Git::Story::App
         "#{name.to_s.gsub(?_, ' ').ljust(longest)} #{a[:doc]}"
       }
     )
+  end
+
+  command doc: 'initialize git story config file if missing'
+  def setup
+    if cc.config?
+      red("config/story.yml configration already exists!")
+    else
+      Git::Story::Setup.perform
+    end
   end
 
   command doc: 'output the current story branch if it is checked out'
