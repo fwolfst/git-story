@@ -58,10 +58,10 @@ class Git::Story::App
     else
       if @command
         @command = @command.inspect
+        STDERR.puts "Unknown command #{@command}\n\n#{help.join(?\n)}"
       else
-        @command = 'n/a'
+        STDERR.puts "No command provided, showing help\n\n#{help.join(?\n)}"
       end
-      STDERR.puts "Unknown command #{@command}\n\n#{help.join(?\n)}"
       exit 1
     end
   rescue Errno::EPIPE
