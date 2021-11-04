@@ -23,9 +23,6 @@ gem install git-story
 tooling to conveniently use named branches and integrations in a rather
 specific development and deployment processes (at betterplace).
 
-**Calling git-story will create directories and files in your current working
-directory**
-
 ## Usage
 
 ```bash
@@ -35,6 +32,7 @@ mkdir -p .git/hooks
 
 Available commands are:
 help                this help
+setup               initialize git story config file and copy hooks if missing
 current             output the current story branch if it is checked out
 status              [STORY_ID] fetch status of current story, -n SECONDS refreshes
 list                [AUTHOR] list all stories
